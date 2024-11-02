@@ -15,6 +15,3 @@
 
     * In include/data o sa dam definitiile claselor si obiectelor, include/models e pt caracterul nostru
     (sau daca creeam mai multe), include/sounds sonor si include/textures pentru fundal, obiecte etc.
-
-
-## #TODO
