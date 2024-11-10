@@ -1,0 +1,5 @@
+# Levels
+
+This is where we setup the current level and. We use the levels directory form assets and look into the current planet to get the configurations of the planet. Then, depending on the level, we load the necessary data.
+
+IMPORTANT: Based on how we approach this, we might need to further split the planet directories from /assets/levels/ into further level directories, so each level has its own JSON file with data

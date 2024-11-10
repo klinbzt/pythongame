@@ -1,0 +1,12 @@
+# game_engine
+
+1. engine.py
+
+Here is where components come together and create the game
+I've provided a mock demo to illustrate the structure, very simplified
+
+2. input_handler
+
+Here is where we address the different inputs a user might make:
+-> E.g: AD for left / right movement
+-> SPACE for jumping etc.

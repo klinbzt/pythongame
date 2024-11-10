@@ -1,0 +1,3 @@
+# Assets
+
+Here we will store all the assets used throughout the project, categorized and structured in directories.
