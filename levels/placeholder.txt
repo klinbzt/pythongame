@@ -1,0 +1,18 @@
+# Levels
+
+In this directory we will have the layouts created with Tiled, which we will then import and load. As far as I could tell, the files resemble HTML, but there needs to be done some more research.
+
+Basically, each planet has its own directory. In it, the layouts of each level, which we load when the player gets ready to enter a new level of the planet. We also have a planet_config.json file, which we'll use to store the relevant data on each planet, such as the gravity of the planet, the background of the levels of this planet ( from assets ), the background-music ( from assets ), etc
+
+/levels
+|
+|__/planet_one
+    |
+    |__level_1.tmx ( layout )
+    |__level_2.tmx ( layout )
+    |__level_3.tmx ( layout )
+    |__planet_config.json ( configurarile planetei: gravitatie, background, muzica de fundal )
+|
+|__/planet_two
+    |
+    |...

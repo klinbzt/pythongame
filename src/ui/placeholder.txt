@@ -1,0 +1,9 @@
+# ui
+
+1. hud.py
+
+Here we write the functions that display the stats of the player on the screen ( health, deaths, powerups he has, etc. ) and other stats ( current planet, current level, etc. )
+
+2. menu.py
+
+We might need a menu for the player to navigate to a previous level, or restart the level if he messes smth up, etc. ( we need to discuss this over )

@@ -1,0 +1,12 @@
+# Entities
+
+1. player.py
+
+Here will be the class of the player
+
+2. platform.py
+
+Here will be the classes of all other entities, such as terrain, (possible) objects
+
+IMPORTANT: If you see fit, create an enemies directory for all potential threats:
+-> E.g: spikes, deadly plants, zombies, etc

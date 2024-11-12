@@ -1,0 +1,5 @@
+# Audio Manager
+
+Here we manage the audio of the game, in any given scenario:
+-> E.g: Play the background-music of the current planet ( you find this in the planet_config.json() )
+-> Setup and play sound effects on different player events ( takes damage, completes the level, etc. )

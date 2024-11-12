@@ -1,0 +1,5 @@
+# Sounds
+
+Here we will store the sounds used throughout the project:
+-> background music for each planet
+-> sound effects on jump, on getPowerUp, on taking damage, etc
