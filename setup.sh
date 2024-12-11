@@ -13,6 +13,8 @@ fi
 echo "----------Setup for the python IAp4 project----------"
 if [ "$1" = "create" ]; then
     python3 -m venv .venv
+    source ./.venv/bin/activate
+    pip3 install -r requirements.txt
     echo "Created virtual environment .venv"
 elif [ "$1" = "activate" ]; then
     activdir=$(pwd)

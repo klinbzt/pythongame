@@ -8,7 +8,6 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Shifting Realms")
     
-    # Initialize Game Engine
     engine = GameEngine(screen)
     engine.run()
 
