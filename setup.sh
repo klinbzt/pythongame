@@ -1,11 +1,21 @@
 #!/bin/bash
 
-if [ ! -d ".venv" ]; then
-    python3 -m venv .venv
-    echo "Created virtual environment .venv"
+if [ $# -eq 0 ]; then
+    echo -e "usage: ./setup.sh [option1] ...\n\n[option1] may include:\n\tcreate - creates the venv\n\tactivate - activates the .venv., (.venv) should appear in front of user prompt.\n\tdelete - deletes the .venv."
+    exit 0
 fi
 
-source .venv/bin/activate
+if [ "$1" = "delete" ]; then
+    rm -r .venv
+    exit 0
+fi
 
-pip3 install -r requirements.txt
-echo "Dependencies installed."
+echo "----------Setup for the python IAp4 project----------"
+if [ "$1" = "create" ]; then
+    python3 -m venv .venv
+    echo "Created virtual environment .venv"
+elif [ "$1" = "activate" ]; then
+    activdir=$(pwd)
+    echo -e "Run this command in your bash to activate the .venv:\n\tsource ./.venv/bin/activate"
+    echo -e "\nShould appear (.venv) in front of your user prompt\n |\n |\n \/"
+fi
