@@ -26,5 +26,5 @@ class GameEngine:
 
     def draw(self):
         """Render game elements on the screen."""
-        # self.screen.fill(BLACK)
+        self.screen.fill(BLACK)
         pygame.display.flip()
