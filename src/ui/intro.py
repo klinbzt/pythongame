@@ -1,6 +1,5 @@
-import pygame
-import sys
-from settings import FPS, BLACK, SCREEN_WIDTH, SCREEN_HEIGHT
+from utils.settings import *
+
 class StartupScreen:
     def __init__(self, screen, sheets):
         self.screen = screen

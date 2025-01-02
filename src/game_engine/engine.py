@@ -1,5 +1,4 @@
-import pygame
-from settings import FPS, BLACK, SCREEN_WIDTH, SCREEN_HEIGHT
+from utils.settings import *
 
 class GameEngine:
     def __init__(self, screen):
