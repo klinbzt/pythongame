@@ -20,7 +20,7 @@ class Game:
         }
 
         # Define current level data
-        self.current_planet = self.planets[1]
+        self.current_planet = self.planets[0]
         self.current_tmx_map = 0
 
         # Issue! If the map doesn't load in time, the collisions aren't set up and the player falls off the map before it's loaded. Needs to be fixed asap
