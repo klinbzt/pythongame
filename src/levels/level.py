@@ -3,9 +3,9 @@ from sprites.sprite import Sprite
 from entities.player import Player
 
 class Level:
-	def __init__(self, tmx_map):
+	def __init__(self, planet, tmx_map):
+		self.planet = planet
 		self.screen = pygame.display.get_surface()
-	
 		self.all_sprites = pygame.sprite.Group()
 		self.collision_sprites = pygame.sprite.Group()
 
@@ -17,9 +17,10 @@ class Level:
 
 		for obj in tmx_map.get_layer_by_name("Objects"):
 			if obj.name == "player":
-				Player((obj.x, obj.y), self.all_sprites, self.collision_sprites)
+				# Change with obj.x, obj.y. This is only a temporary fix for the problem highlighted in main.py
+				Player((250, -350), self.all_sprites, self.collision_sprites, self.planet)
 
 	def run(self, dt):
-		self.all_sprites.update(dt)
 		self.screen.fill(BLACK)
+		self.all_sprites.update(dt)
 		self.all_sprites.draw(self.screen)

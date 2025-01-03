@@ -1,0 +1,10 @@
+{
+	"name": "Planet Two",
+	"gravity_strength": 200,
+	"levels": [
+		"level_mock.tmx",
+		"level_mock.tmx",
+		"level_mock.tmx",
+		"level_mock.tmx"
+	]
+}
