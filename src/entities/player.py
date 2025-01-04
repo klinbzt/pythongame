@@ -1,5 +1,5 @@
 from utils.settings import *
-from utils.timer import Timer
+from utils.timer import *
 
 # Movements so far: left, right, jump, wall sliding, wall jump, dash
 
@@ -38,10 +38,12 @@ class Player(pygame.sprite.Sprite):
 		# Collisions
 		self.collision_sprites = collision_sprites
 		self.on_surface = {"ground": False, "left": False, "right": False}
+		self.platform = None
 
 		# Timer
 		self.timers = {
-			"wall jump": Timer(200),
+			"wall jump": Timer(400),
+			"wall slide block": Timer(250),
 			"dash cooldown": Timer(1000),
 			"dash duration": Timer(200)
 		}
@@ -80,7 +82,7 @@ class Player(pygame.sprite.Sprite):
 		self.direction.y = 0
 		self.jump = False
 
-	def handle_movement(self, dt):
+	def handle_player_movement(self, dt):
 		if self.dashing:
 			# Dash movement in the last known direction
 			self.rect.x += self.last_direction.x * self.dash_speed * dt
@@ -96,16 +98,17 @@ class Player(pygame.sprite.Sprite):
 			self.collision("x")
 
 			# Move and check for collision on y axis
-			if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])):
-				self.planet.apply_sliding_gravity(self, dt)
+			if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
+				self.planet.apply_gravity_on_wall_slide(self, dt)
 			else:
 				self.planet.apply_gravity(self, dt)
 
-			# Jump if the conditions are met ( be on the ground )
+			# Jump if the conditions are met ( be on the ground or touch a wall and press SPACE in the timer window )
 			if self.jump:
 				if self.on_surface["ground"]:
 					self.direction.y -= self.jump_height
-				elif any((self.on_surface["left"], self.on_surface["right"])):
+					self.timers["wall slide block"].activate()
+				elif any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
 					# If the player is on a wall, activate the "wall jump" timer. In this window of time, the player can jump off of the wall in the oposite direction
 					self.timers["wall jump"].activate()
 					self.direction.y -= self.jump_height
@@ -115,8 +118,14 @@ class Player(pygame.sprite.Sprite):
 						self.direction.x = -1
 				self.jump = False
 			
+			self.handle_platform_movement(dt)
+			
 			self.collision("y")
-	
+
+	def handle_platform_movement(self, dt):
+		if self.platform:
+			self.rect.topleft += self.platform.direction * self.platform.speed * dt
+
 	def check_contact(self):
 		ground_rect = pygame.Rect(self.rect.bottomleft, (self.rect.width, 2))
 		right_rect = pygame.Rect(self.rect.topright + vector(0, self.rect.height / 4), (2, self.rect.height / 2))
@@ -124,21 +133,28 @@ class Player(pygame.sprite.Sprite):
 
 		collide_rects = [sprite.rect for sprite in self.collision_sprites]
 
-		if ground_rect.collidelist(collide_rects) >= 0:
+		self.on_surface["ground"] = False
+		self.on_surface["right"] = False
+		self.on_surface["left"] = False
+
+		# Track if the player is on a platform
+		self.platform = None
+		for sprite in [sprite for sprite in self.collision_sprites.sprites() if hasattr(sprite, "moving")]:
+			if sprite.rect.colliderect(ground_rect):
+				self.platform = sprite
+				self.on_surface["ground"] = True
+
+		# Ground detection for non-moving surfaces
+		if self.platform is None and ground_rect.collidelist(collide_rects) >= 0:
 			self.on_surface["ground"] = True
-		else:
-			self.on_surface["ground"] = False
-		
+
+		# Check for wall collisions
 		if right_rect.collidelist(collide_rects) >= 0:
 			self.on_surface["right"] = True
-		else:
-			self.on_surface["right"] = False
 
 		if left_rect.collidelist(collide_rects) >= 0:
 			self.on_surface["left"] = True
-		else:
-			self.on_surface["left"] = False
-	
+
 	def collision(self, axis):
 		for sprite in self.collision_sprites:
 			if sprite.rect.colliderect(self.rect):
@@ -156,6 +172,9 @@ class Player(pygame.sprite.Sprite):
 					# Top
 					if self.rect.top <= sprite.rect.bottom and self.prev_rect.top >= sprite.prev_rect.bottom:
 						self.rect.top = sprite.rect.bottom
+						# Offset the player
+						if hasattr(sprite, "moving"):
+							self.rect.top += 6
 
 					# Bottom
 					if self.rect.bottom >= sprite.rect.top and self.prev_rect.top <= sprite.prev_rect.top:
@@ -163,13 +182,9 @@ class Player(pygame.sprite.Sprite):
 					
 					self.direction.y = 0
 
-	def update_timers(self):
-		for timer in self.timers.values():
-			timer.update()
-
 	def update(self, dt):
+		update_timers(self)
 		self.prev_rect = self.rect.copy()
-		self.update_timers()
 		self.handle_input()
-		self.handle_movement(dt)
+		self.handle_player_movement(dt)
 		self.check_contact()

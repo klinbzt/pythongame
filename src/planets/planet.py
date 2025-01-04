@@ -18,6 +18,7 @@ class Planet:
         entity.rect.y += entity.direction.y * dt
         entity.direction.y += self.gravity_strength / 2 * dt
     
-    def apply_sliding_gravity(self, entity, dt):
+    def apply_gravity_on_wall_slide(self, entity, dt):
+        """Apply gravity to the entity's vertical velocity when wall sliding."""
         entity.direction.y = 0
         entity.rect.y += self.gravity_strength / 10 * dt

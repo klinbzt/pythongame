@@ -24,3 +24,7 @@ class Timer:
 			if self.func and self.start_time != 0:
 				self.func()
 			self.deactivate()
+
+def update_timers(entity):
+	for timer in entity.timers.values():
+		timer.update()

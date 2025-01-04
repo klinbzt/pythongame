@@ -13,7 +13,7 @@
   <image source="../../assets/graphics/tilesets/player.png" width="64" height="64"/>
  </tileset>
  <objectgroup id="8" name="Objects">
-  <object id="9" name="player" gid="317" x="388" y="607.556" width="64" height="64"/>
+  <object id="9" name="player" gid="317" x="368" y="315.334" width="64" height="64"/>
  </objectgroup>
  <layer id="1" name="Terrain" width="40" height="23">
   <data encoding="csv">
