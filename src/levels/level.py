@@ -4,21 +4,29 @@ from entities.player import Player
 from levels.flag import Flag
 
 class Level:
-    def __init__(self, planet, tmx_map, next_level_callback):
+    def __init__(self, planet, level, next_level_callback):
         """Initialize the level with the given planet, map, and callback for the next level."""
-        self.planet = planet
         self.screen = pygame.display.get_surface()
+
+        # Sprites
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
+
+        # Level data
+        self.planet = planet
+        self.tmx_map = level["tmx_map"]
+        self.permissions = level["permissions"]
+
+        # Callback
         self.next_level_callback = next_level_callback
 
-        self.setup(tmx_map)
+        self.setup()
 
-    def setup(self, tmx_map):
+    def setup(self):
         """Set up the level with terrain, moving objects, and player."""
         # Terrain (Tiles)
         try:
-            terrain_layer = tmx_map.get_layer_by_name("Terrain")
+            terrain_layer = self.tmx_map.get_layer_by_name("Terrain")
             for pos_x, pos_y, surf in terrain_layer.tiles():
                 Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, (self.all_sprites, self.collision_sprites))
         except ValueError:
@@ -26,7 +34,7 @@ class Level:
 
         # Moving Objects
         try:
-            moving_objects_layer = tmx_map.get_layer_by_name("Moving Objects")
+            moving_objects_layer = self.tmx_map.get_layer_by_name("Moving Objects")
             for obj in moving_objects_layer:
                 if obj.name == "moving_skel":
                     # Moving on the x-axis
@@ -48,11 +56,11 @@ class Level:
         
         # Objects
         try:
-            objects_layer = tmx_map.get_layer_by_name("Objects")
+            objects_layer = self.tmx_map.get_layer_by_name("Objects")
             for obj in objects_layer:
                 if obj.name == "player":
                     # Create the player
-                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet)
+                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions)
                 if obj.name == "flag":
                     # Create the flag
                     self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.next_level_callback)

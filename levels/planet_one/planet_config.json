@@ -1,5 +1,0 @@
-{
-	"name": "Planet One",
-	"gravity_strength": 1300,
-	"levels": ["level_mock.tmx", "level_mock_moving_platform.tmx"]
-}

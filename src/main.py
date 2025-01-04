@@ -1,7 +1,6 @@
 from utils.settings import *
 from os.path import join
 from utils.helpers import *
-from planets.planet import Planet
 from levels.level import Level
 
 class Game:
@@ -13,17 +12,15 @@ class Game:
 
         # Define planets with specific gravity
         self.planets = {
-            1: load_planet(join("..", "levels", "planet_one")),
-            2: load_planet(join("..", "levels", "planet_two")),
-            3: load_planet(join("..", "levels", "planet_three")),
+            1: load_planet(join("..", "levels", "planet_1")),
+            2: load_planet(join("..", "levels", "planet_2")),
+            3: load_planet(join("..", "levels", "planet_3")),
         }
 
         # Define current level data
         self.current_level_index = 0
         self.current_planet_index = 1
         self.current_planet = self.planets[self.current_planet_index]
-
-        # Issue! If the map doesn't load in time, the collisions aren't set up and the player falls off the map before it's loaded. Needs to be fixed asap
 
         # Create current level
         self.level = Level(
@@ -44,7 +41,7 @@ class Game:
             self.current_planet_index += 1
 
             # If we've run out of planets, end the game
-            if self.current_planet_index >= len(self.planets):
+            if self.current_planet_index > len(self.planets):
                 print("Game Over! You've completed all levels!")
                 pygame.quit()
                 sys.exit()
@@ -53,6 +50,8 @@ class Game:
             self.current_planet = self.planets[self.current_planet_index]
             self.current_level_index = 0
             self.level = Level(self.current_planet, self.current_planet.get_level(self.current_level_index), self.next_level_callback)
+
+    # Issue! If the map doesn't load in time, the collisions aren't set up and the player falls off the map before it's loaded. Needs to be fixed asap
     
     def run(self):
         while True:

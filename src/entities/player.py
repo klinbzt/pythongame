@@ -1,190 +1,191 @@
 from utils.settings import *
 from utils.timer import *
 
-# Movements so far: left, right, jump, wall sliding, wall jump, dash
-
-# I was thinking of adding anything beyond left and right movement gradually, as levels become more complex
-# E.g: Lvl.1: Just move in a straight line to the flag. Unlock jumping
-# Lvl.2: You gotta jump on some platforms / over some walls to the flag. Unlock wall sliding and wall jump
-# Lvl.3: Combine the above to reach the flag for a few levels
-# Lvl.x: Unlock dashing etc...
-
-# TODO: Add mass to the player ( first ) and other physical objects ( later, maybe ) and include it in the gravity calculation, so maybe we can add powerups like "BecomeHeavy" / "BecomeLight" idk...
-
 class Player(pygame.sprite.Sprite):
-	def __init__(self, pos, groups, collision_sprites, planet):
-		super().__init__(groups)
-		self.image = pygame.Surface((64, 64))
-		self.image.fill("red")
-		self.planet = planet
+    def __init__(self, pos, groups, collision_sprites, planet, permissions):
+        """
+        Initialize the player with position, groups, collision sprites, and movement permissions.
+        pos: Initial position of the player.
+        groups: Groups to which the player belongs.
+        collision_sprites: Sprites the player can collide with.
+        planet: Gravity or environment-related effects.
+        permissions: Dictionary containing boolean values for movement permissions.
+        """
+        super().__init__(groups)
+        self.image = pygame.Surface((64, 64))
+        self.image.fill("red")
+        self.planet = planet
 
-		# Rects
-		self.rect = self.image.get_rect(topleft = pos)
-		self.prev_rect = self.rect.copy()
+        # Rects
+        self.rect = self.image.get_rect(topleft = pos)
+        self.prev_rect = self.rect.copy()
 
-		# Movements
-		self.direction = vector()
-		self.last_direction = vector(1, 0)
-		self.speed = 200
-		self.jump_height = 350
-		self.jump = False
+        # Movements
+        self.direction = vector()
+        self.speed = 200
+        
+		# Jump
+        self.jump_height = 350
+        self.jump = False
 
-		# Dash
-		self.dash_speed = 600
-		self.dashing = False
-		self.dash_cooldown = Timer(1000)
-		self.dash_duration = Timer(200)
+        # Dash
+        self.last_direction = vector(1, 0)
+        self.dash_speed = 600
+        self.dashing = False
 
-		# Collisions
-		self.collision_sprites = collision_sprites
-		self.on_surface = {"ground": False, "left": False, "right": False}
-		self.platform = None
+        # Collision handling
+        self.collision_sprites = collision_sprites
+        self.on_surface = {"ground": False, "left": False, "right": False}
+        self.platform = None
 
-		# Timer
-		self.timers = {
-			"wall jump": Timer(400),
-			"wall slide block": Timer(250),
-			"dash cooldown": Timer(1000),
-			"dash duration": Timer(200)
-		}
+        # Permissions
+        self.permissions = permissions
 
-	def handle_input(self):
-		keys = pygame.key.get_pressed()
-		input_vector = vector(0, 0)
+        # Timer
+        self.timers = {
+            "wall jump": Timer(400),
+            "wall slide block": Timer(250),
+            "dash cooldown": Timer(1000),
+            "dash duration": Timer(200)
+        }
 
-		# Don't allow other input while the "wall jump" timer is active
-		if not self.timers["wall jump"].active:
-			if keys[pygame.K_RIGHT]:
-				input_vector.x += 1
-			if keys[pygame.K_LEFT]:
-				input_vector.x -= 1
-			if input_vector:
-				self.direction.x = input_vector.normalize().x
-				self.last_direction = vector(self.direction.x, 0)  # Update last direction
-			else:
-				self.direction.x = 0
-		
-		if keys[pygame.K_SPACE]:
-			self.jump = True
+    def handle_input(self):
+        keys = pygame.key.get_pressed()
+        input_vector = vector(0, 0)
 
-		 # Trigger dash if D is pressed and cooldown is over
-		if keys[pygame.K_d] and not self.dashing and not self.timers["dash cooldown"].active:
-			self.start_dash()
+        # Don't allow other input while the "wall jump" timer is active
+        if not self.timers["wall jump"].active:
+            if keys[pygame.K_RIGHT]:
+                input_vector.x += 1
+            if keys[pygame.K_LEFT]:
+                input_vector.x -= 1
+            if input_vector:
+                self.direction.x = input_vector.normalize().x
+                self.last_direction = vector(self.direction.x, 0)  # Update last direction
+            else:
+                self.direction.x = 0
 
-	def start_dash(self):
-		"""Start the dash movement."""
-		self.dashing = True
-		self.image.fill("blue")
-		self.timers["dash duration"].activate()  # Start dash duration timer
-		self.timers["dash cooldown"].activate()  # Start cooldown timer
+        # Check jump permission
+        if self.permissions.get("jump", False) and keys[pygame.K_SPACE]:
+            self.jump = True
 
-		# Cancel any ongoing jump
-		self.direction.y = 0
-		self.jump = False
+        # Trigger dash if permission allows
+        if self.permissions.get("dash", False) and keys[pygame.K_d] and not self.dashing and not self.timers["dash cooldown"].active:
+            self.start_dash()
 
-	def handle_player_movement(self, dt):
-		if self.dashing:
-			# Dash movement in the last known direction
-			self.rect.x += self.last_direction.x * self.dash_speed * dt
-			self.collision("x")
+    def start_dash(self):
+        """Start the dash movement."""
+        self.dashing = True
+        self.image.fill("blue")
+        self.timers["dash duration"].activate()  # Start dash duration timer
+        self.timers["dash cooldown"].activate()  # Start cooldown timer
 
-			# Stop dashing when the dash duration ends
-			if not self.timers["dash duration"].active:
-				self.dashing = False
-				self.image.fill("red")
-		else:
-			# Move and check for collision on x axis
-			self.rect.x += self.direction.x * self.speed * dt
-			self.collision("x")
+        # Cancel any ongoing jump
+        self.direction.y = 0
+        self.jump = False
 
-			# Move and check for collision on y axis
-			if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
-				self.planet.apply_gravity_on_wall_slide(self, dt)
-			else:
-				self.planet.apply_gravity(self, dt)
+    def handle_player_movement(self, dt):
+        if self.dashing:
+            # Dash movement in the last known direction
+            self.rect.x += self.last_direction.x * self.dash_speed * dt
+            self.collision("x")
 
-			# Jump if the conditions are met ( be on the ground or touch a wall and press SPACE in the timer window )
-			if self.jump:
-				if self.on_surface["ground"]:
-					self.direction.y -= self.jump_height
-					self.timers["wall slide block"].activate()
-				elif any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
-					# If the player is on a wall, activate the "wall jump" timer. In this window of time, the player can jump off of the wall in the oposite direction
-					self.timers["wall jump"].activate()
-					self.direction.y -= self.jump_height
-					if self.on_surface["left"]:
-						self.direction.x = 1
-					else:
-						self.direction.x = -1
-				self.jump = False
-			
-			self.handle_platform_movement(dt)
-			
-			self.collision("y")
+            # Stop dashing when the dash duration ends
+            if not self.timers["dash duration"].active:
+                self.dashing = False
+                self.image.fill("red")
+        else:
+            # Move and check for collision on x axis
+            self.rect.x += self.direction.x * self.speed * dt
+            self.collision("x")
 
-	def handle_platform_movement(self, dt):
-		if self.platform:
-			self.rect.topleft += self.platform.direction * self.platform.speed * dt
+            # Apply gravity or wall slide physics if conditions are met
+            if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])) and self.permissions.get("wall_slide", False) and not self.timers["wall slide block"].active:
+                self.planet.apply_gravity_on_wall_slide(self, dt)
+            else:
+                self.planet.apply_gravity(self, dt)
 
-	def check_contact(self):
-		ground_rect = pygame.Rect(self.rect.bottomleft, (self.rect.width, 2))
-		right_rect = pygame.Rect(self.rect.topright + vector(0, self.rect.height / 4), (2, self.rect.height / 2))
-		left_rect = pygame.Rect((self.rect.topleft + vector(-2, self.rect.height / 4)), (2, self.rect.height / 2))
+            # Jump logic
+            if self.jump:
+                if self.on_surface["ground"]:
+                    self.direction.y -= self.jump_height
+                    self.timers["wall slide block"].activate()
+                elif self.permissions.get("wall_jump", False) and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
+                    # Wall jump logic
+                    self.timers["wall jump"].activate()
+                    self.direction.y -= self.jump_height
+                    if self.on_surface["left"]:
+                        self.direction.x = 1
+                    else:
+                        self.direction.x = -1
+                self.jump = False
 
-		collide_rects = [sprite.rect for sprite in self.collision_sprites]
+            self.handle_platform_movement(dt)
+            self.collision("y")
 
-		self.on_surface["ground"] = False
-		self.on_surface["right"] = False
-		self.on_surface["left"] = False
+    def handle_platform_movement(self, dt):
+        if self.platform:
+            self.rect.topleft += self.platform.direction * self.platform.speed * dt
 
-		# Track if the player is on a platform
-		self.platform = None
-		for sprite in [sprite for sprite in self.collision_sprites.sprites() if hasattr(sprite, "moving")]:
-			if sprite.rect.colliderect(ground_rect):
-				self.platform = sprite
-				self.on_surface["ground"] = True
+    def check_contact(self):
+        ground_rect = pygame.Rect(self.rect.bottomleft, (self.rect.width, 2))
+        right_rect = pygame.Rect(self.rect.topright + vector(0, self.rect.height / 4), (2, self.rect.height / 2))
+        left_rect = pygame.Rect((self.rect.topleft + vector(-2, self.rect.height / 4)), (2, self.rect.height / 2))
 
-		# Ground detection for non-moving surfaces
-		if self.platform is None and ground_rect.collidelist(collide_rects) >= 0:
-			self.on_surface["ground"] = True
+        collide_rects = [sprite.rect for sprite in self.collision_sprites]
 
-		# Check for wall collisions
-		if right_rect.collidelist(collide_rects) >= 0:
-			self.on_surface["right"] = True
+        self.on_surface["ground"] = False
+        self.on_surface["right"] = False
+        self.on_surface["left"] = False
 
-		if left_rect.collidelist(collide_rects) >= 0:
-			self.on_surface["left"] = True
+        # Track if the player is on a platform
+        self.platform = None
+        for sprite in [sprite for sprite in self.collision_sprites.sprites() if hasattr(sprite, "moving")]:
+            if sprite.rect.colliderect(ground_rect):
+                self.platform = sprite
+                self.on_surface["ground"] = True
 
-	def collision(self, axis):
-		for sprite in self.collision_sprites:
-			if sprite.rect.colliderect(self.rect):
-				# Check collision on x axis
-				if axis == "x":
-					# Left
-					if self.rect.left <= sprite.rect.right and self.prev_rect.left >= sprite.prev_rect.right:
-						self.rect.left = sprite.rect.right
+        # Ground detection for non-moving surfaces
+        if self.platform is None and ground_rect.collidelist(collide_rects) >= 0:
+            self.on_surface["ground"] = True
 
-					# Right
-					if self.rect.right >= sprite.rect.left and self.prev_rect.right <= sprite.prev_rect.left:
-						self.rect.right = sprite.rect.left
-				# Check collision on y axis
-				else:
-					# Top
-					if self.rect.top <= sprite.rect.bottom and self.prev_rect.top >= sprite.prev_rect.bottom:
-						self.rect.top = sprite.rect.bottom
-						# Offset the player
-						if hasattr(sprite, "moving"):
-							self.rect.top += 6
+        # Check for wall collisions
+        if right_rect.collidelist(collide_rects) >= 0:
+            self.on_surface["right"] = True
 
-					# Bottom
-					if self.rect.bottom >= sprite.rect.top and self.prev_rect.top <= sprite.prev_rect.top:
-						self.rect.bottom = sprite.rect.top
-					
-					self.direction.y = 0
+        if left_rect.collidelist(collide_rects) >= 0:
+            self.on_surface["left"] = True
 
-	def update(self, dt):
-		update_timers(self)
-		self.prev_rect = self.rect.copy()
-		self.handle_input()
-		self.handle_player_movement(dt)
-		self.check_contact()
+    def collision(self, axis):
+        for sprite in self.collision_sprites:
+            if sprite.rect.colliderect(self.rect):
+                # Check collision on x axis
+                if axis == "x":
+                    # Left
+                    if self.rect.left <= sprite.rect.right and self.prev_rect.left >= sprite.prev_rect.right:
+                        self.rect.left = sprite.rect.right
+
+                    # Right
+                    if self.rect.right >= sprite.rect.left and self.prev_rect.right <= sprite.prev_rect.left:
+                        self.rect.right = sprite.rect.left
+                # Check collision on y axis
+                else:
+                    # Top
+                    if self.rect.top <= sprite.rect.bottom and self.prev_rect.top >= sprite.prev_rect.bottom:
+                        self.rect.top = sprite.rect.bottom
+                        # Offset the player
+                        if hasattr(sprite, "moving"):
+                            self.rect.top += 6
+
+                    # Bottom
+                    if self.rect.bottom >= sprite.rect.top and self.prev_rect.top <= sprite.prev_rect.top:
+                        self.rect.bottom = sprite.rect.top
+
+                    self.direction.y = 0
+
+    def update(self, dt):
+        update_timers(self)
+        self.prev_rect = self.rect.copy()
+        self.handle_input()
+        self.handle_player_movement(dt)
+        self.check_contact()
