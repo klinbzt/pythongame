@@ -4,26 +4,25 @@ from entities.player import Player
 from levels.flag import Flag
 
 class Level:
-    def __init__(self, planet, level, next_level_callback):
-        """Initialize the level with the given planet, map, and callback for the next level."""
+    def __init__(self, level_data, callback):
         self.screen = pygame.display.get_surface()
 
-        # Sprites
+        # Level data
+        self.planet = level_data["planet"]
+        self.tmx_map = level_data["tmx_map"]
+        self.permissions = level_data["permissions"]
+
+        # Callback
+        self.callback = callback
+
+        # Initialize sprite groups
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
 
-        # Level data
-        self.planet = planet
-        self.tmx_map = level["tmx_map"]
-        self.permissions = level["permissions"]
-
-        # Callback
-        self.next_level_callback = next_level_callback
-
+        # Setup the level
         self.setup()
 
     def setup(self):
-        """Set up the level with terrain, moving objects, and player."""
         # Terrain (Tiles)
         try:
             terrain_layer = self.tmx_map.get_layer_by_name("Terrain")
@@ -63,12 +62,11 @@ class Level:
                     self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions)
                 if obj.name == "flag":
                     # Create the flag
-                    self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.next_level_callback)
+                    self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback)
         except ValueError:
             print("Layer 'Objects' not found.")
 
     def run(self, dt):
-        """Update and draw all sprites, and check for flag collision."""
         self.screen.fill(BLACK)
         self.all_sprites.update(dt)
         self.all_sprites.draw(self.screen)

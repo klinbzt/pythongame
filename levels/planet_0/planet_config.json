@@ -1,0 +1,24 @@
+{
+	"name": "Tutorial",
+	"gravity_strength": 1300,
+	"levels": [
+		{
+			"tmx_map": "level_mock.tmx",
+			"permissions": {
+				"jump": true,
+				"wall_jump": true,
+				"wall_slide": true,
+				"dash": true
+			}
+		},
+		{
+			"tmx_map": "level_mock_moving_platform.tmx",
+			"permissions": {
+				"jump": true,
+				"wall_jump": true,
+				"wall_slide": true,
+				"dash": true
+			}
+		}
+	]
+}

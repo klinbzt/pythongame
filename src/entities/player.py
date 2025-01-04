@@ -3,14 +3,6 @@ from utils.timer import *
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_sprites, planet, permissions):
-        """
-        Initialize the player with position, groups, collision sprites, and movement permissions.
-        pos: Initial position of the player.
-        groups: Groups to which the player belongs.
-        collision_sprites: Sprites the player can collide with.
-        planet: Gravity or environment-related effects.
-        permissions: Dictionary containing boolean values for movement permissions.
-        """
         super().__init__(groups)
         self.image = pygame.Surface((64, 64))
         self.image.fill("red")
@@ -74,7 +66,6 @@ class Player(pygame.sprite.Sprite):
             self.start_dash()
 
     def start_dash(self):
-        """Start the dash movement."""
         self.dashing = True
         self.image.fill("blue")
         self.timers["dash duration"].activate()  # Start dash duration timer
