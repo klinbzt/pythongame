@@ -1,10 +1,5 @@
 {
 	"name": "Planet Three",
 	"gravity_strength": 2000,
-	"levels": [
-		"level_mock.tmx",
-		"level_mock.tmx",
-		"level_mock.tmx",
-		"level_mock.tmx"
-	]
+	"levels": ["level_mock.tmx", "level_mock_moving_platform.tmx"]
 }

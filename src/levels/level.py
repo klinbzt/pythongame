@@ -5,21 +5,17 @@ from levels.flag import Flag
 
 class Level:
     def __init__(self, planet, tmx_map, next_level_callback):
-        """
-        Initialize the level with the given planet, map, and callback for the next level.
-        """
+        """Initialize the level with the given planet, map, and callback for the next level."""
         self.planet = planet
         self.screen = pygame.display.get_surface()
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
-        self.next_level_callback = next_level_callback  # Callback for moving to the next level
+        self.next_level_callback = next_level_callback
 
         self.setup(tmx_map)
 
     def setup(self, tmx_map):
-        """
-        Set up the level with terrain, moving objects, and player.
-        """
+        """Set up the level with terrain, moving objects, and player."""
         # Terrain (Tiles)
         try:
             terrain_layer = tmx_map.get_layer_by_name("Terrain")
@@ -58,19 +54,16 @@ class Level:
                     # Create the player
                     self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet)
                 if obj.name == "flag":
-                    # Create the flag and pass the callback to it
+                    # Create the flag
                     self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.next_level_callback)
         except ValueError:
             print("Layer 'Objects' not found.")
 
     def run(self, dt):
-        """
-        Update and draw all sprites, and check for flag collision.
-        """
+        """Update and draw all sprites, and check for flag collision."""
         self.screen.fill(BLACK)
         self.all_sprites.update(dt)
         self.all_sprites.draw(self.screen)
 
-        # Check for flag collision
-        if self.flag:  # Ensure the flag exists
-            self.flag.check_collision(self.player)  # Pass player to flag for collision check
+        # Check for collision between player and flag
+        self.flag.check_collision(self.player)

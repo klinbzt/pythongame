@@ -13,7 +13,6 @@ class Game:
 
         # Define planets with specific gravity
         self.planets = {
-            0: load_planet(join("..", "levels", "planet_mock")),
             1: load_planet(join("..", "levels", "planet_one")),
             2: load_planet(join("..", "levels", "planet_two")),
             3: load_planet(join("..", "levels", "planet_three")),
@@ -21,7 +20,7 @@ class Game:
 
         # Define current level data
         self.current_level_index = 0
-        self.current_planet_index = 0
+        self.current_planet_index = 1
         self.current_planet = self.planets[self.current_planet_index]
 
         # Issue! If the map doesn't load in time, the collisions aren't set up and the player falls off the map before it's loaded. Needs to be fixed asap
