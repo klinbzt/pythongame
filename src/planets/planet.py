@@ -6,10 +6,10 @@ class Planet:
         self.gravity_strength = gravity_strength
         self.levels = levels
     
-    def get_tmx_map(self, tmx_map_number):
+    def get_level(self, level_index):
         """Return the level corresponding to the given number."""
-        if 0 <= tmx_map_number <= len(self.levels) - 1:
-            return self.levels[tmx_map_number]
+        if 0 <= level_index <= len(self.levels) - 1:
+            return self.levels[level_index]
         return None
         
     def apply_gravity(self, entity, dt):
