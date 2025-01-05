@@ -19,6 +19,10 @@ class Level:
         self.all_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
 
+        # Initialize level general
+        self.player = None
+        self.flag = None
+
         # Setup the level
         self.setup()
 
@@ -72,4 +76,5 @@ class Level:
         self.all_sprites.draw(self.screen)
 
         # Check for collision between player and flag
-        self.flag.check_collision(self.player)
+        if self.flag:
+            self.flag.check_collision(self.player)

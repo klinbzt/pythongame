@@ -3,16 +3,34 @@
 	"gravity_strength": 1300,
 	"levels": [
 		{
-			"tmx_map": "level_mock.tmx",
+			"tmx_map": "level_0.tmx",
+			"permissions": {
+				"jump": false,
+				"wall_jump": false,
+				"wall_slide": false,
+				"dash": false
+			}
+		},
+		{
+			"tmx_map": "level_1.tmx",
+			"permissions": {
+				"jump": true,
+				"wall_jump": false,
+				"wall_slide": false,
+				"dash": false
+			}
+		},
+		{
+			"tmx_map": "level_2.tmx",
 			"permissions": {
 				"jump": true,
 				"wall_jump": true,
 				"wall_slide": true,
-				"dash": true
+				"dash": false
 			}
 		},
 		{
-			"tmx_map": "level_mock_moving_platform.tmx",
+			"tmx_map": "level_3.tmx",
 			"permissions": {
 				"jump": true,
 				"wall_jump": true,

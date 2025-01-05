@@ -19,6 +19,7 @@ class Player(pygame.sprite.Sprite):
 		# Jump
         self.jump_height = 350
         self.jump = False
+        self.wall_jump_height_factor = 1.5 # To account for power loss on x axis movement
 
         # Dash
         self.last_direction = vector(1, 0)
@@ -104,7 +105,7 @@ class Player(pygame.sprite.Sprite):
                 elif self.permissions.get("wall_jump", False) and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
                     # Wall jump logic
                     self.timers["wall jump"].activate()
-                    self.direction.y -= self.jump_height
+                    self.direction.y -= self.wall_jump_height_factor * self.jump_height
                     if self.on_surface["left"]:
                         self.direction.x = 1
                     else:

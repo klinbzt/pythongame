@@ -16,7 +16,7 @@
   <image source="../../assets/graphics/tilesets/flag.png" width="64" height="64"/>
  </tileset>
  <objectgroup id="8" name="Objects">
-  <object id="9" name="player" gid="317" x="368" y="315.334" width="64" height="64"/>
+  <object id="9" name="player" gid="317" x="386" y="672" width="64" height="64"/>
   <object id="10" name="flag" gid="318" x="1183.56" y="192" width="64" height="64"/>
  </objectgroup>
  <layer id="1" name="Terrain" width="40" height="23">
