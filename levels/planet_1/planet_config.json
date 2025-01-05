@@ -1,6 +1,6 @@
 {
 	"name": "Planet One",
-	"gravity_strength": 1300,
+	"gravity_strength": 10,
 	"levels": [
 		{
 			"tmx_map": "level_mock.tmx",
@@ -8,7 +8,9 @@
 				"jump": true,
 				"wall_jump": true,
 				"wall_slide": true,
-				"dash": true
+				"dash": true,
+				"heavy_mode": false,
+				"light_mode": false
 			}
 		},
 		{
@@ -17,7 +19,9 @@
 				"jump": true,
 				"wall_jump": true,
 				"wall_slide": true,
-				"dash": true
+				"dash": true,
+				"heavy_mode": false,
+				"light_mode": false
 			}
 		}
 	]

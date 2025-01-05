@@ -27,6 +27,7 @@ class Level:
         # Setup the level
         self.setup()
 
+    # PROBLEM: On planets with high gravity, the player is rendered, but the platforms / terrain isn't all setup, so the player falls through them and off the map. Needs fixing ASAP
     def setup(self):
         # Terrain (Tiles)
         try:

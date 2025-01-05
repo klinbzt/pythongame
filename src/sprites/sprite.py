@@ -4,7 +4,6 @@ class Sprite(pygame.sprite.Sprite):
 	def __init__(self, pos, surf = pygame.Surface((TILE_SIZE, TILE_SIZE)), groups = None, z = Z_LAYERS['main']):
 		super().__init__(groups)
 		self.image = surf
-		# self.image.fill(WHITE)
 
 		# Rects
 		self.rect = self.image.get_rect(topleft = pos)
@@ -15,6 +14,9 @@ class MovingSprite(Sprite):
 	def __init__(self, groups, start_pos, end_pos, move_direction, speed):
 		surf = pygame.Surface((192, 32))
 		super().__init__(start_pos, surf, groups)
+
+		# PROBLEM: This loads the entire platforms.png ( so the whole image, not a specific platform )
+		# To test: Go to LevelManager, set planet 1, level 1, run the game and go to the moving platforms...
 		self.image = image.load("../assets/graphics/tilesets/platforms.png")
 		if move_direction == "x":
 			self.rect.midleft = start_pos

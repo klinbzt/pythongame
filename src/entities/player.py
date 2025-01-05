@@ -4,28 +4,39 @@ from utils.timer import *
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_sprites, planet, permissions):
         super().__init__(groups)
-        self.image = pygame.Surface((64, 64))
+
+        # Rendering
         self.z = Z_LAYERS['main']
-        self.image = image.load("../assets/graphics/tilesets/player.png")
-        self.planet = planet
+        self.base_image = image.load("../assets/graphics/tilesets/player.png")
+        self.image = self.base_image
 
         # Rects
-        self.rect = self.image.get_rect(topleft = pos)
+        self.rect = self.base_image.get_rect(topleft = pos)
         self.prev_rect = self.rect.copy()
 
         # Movements
+        self.planet = planet
         self.direction = vector()
         self.speed = 200
+        self.mass = 100
         
 		# Jump
-        self.jump_height = 350
+        self.jump_height = 275
         self.jump = False
-        self.wall_jump_height_factor = 1.5 # To account for power loss on x axis movement
+        self.wall_jump_height_factor = 1.5
 
         # Dash
         self.last_direction = vector(1, 0)
         self.dash_speed = 600
         self.dashing = False
+
+        # Mass manipulation - heavy
+        self.heavy_mode = False
+        self.a_key_pressed = False
+
+        # Mass manipulation - light
+        self.light_mode = False
+        self.s_key_pressed = False
 
         # Collision handling
         self.collision_sprites = collision_sprites
@@ -35,7 +46,7 @@ class Player(pygame.sprite.Sprite):
         # Permissions
         self.permissions = permissions
 
-        # Timer
+        # Timers
         self.timers = {
             "wall jump": Timer(400),
             "wall slide block": Timer(250),
@@ -43,11 +54,12 @@ class Player(pygame.sprite.Sprite):
             "dash duration": Timer(200)
         }
 
+    # Handle input
     def handle_input(self):
         keys = pygame.key.get_pressed()
         input_vector = vector(0, 0)
 
-        # Don't allow other input while the "wall jump" timer is active
+        # Don't allow left and right input while the "wall jump" timer is active
         if not self.timers["wall jump"].active:
             if keys[pygame.K_RIGHT]:
                 input_vector.x += 1
@@ -63,10 +75,39 @@ class Player(pygame.sprite.Sprite):
         if self.permissions.get("jump", False) and keys[pygame.K_SPACE]:
             self.jump = True
 
-        # Trigger dash if permission allows
+        # Trigger dash if permission allow it
         if self.permissions.get("dash", False) and keys[pygame.K_d] and not self.dashing and not self.timers["dash cooldown"].active:
             self.start_dash()
 
+        # Trigger heavy mode if permissions allow it
+        # Only toggle when the key is first pressed. Reset when the key is released
+        if self.permissions.get("heavy_mode", False) and keys[pygame.K_a]:
+            if not self.a_key_pressed and not self.light_mode: # One mass manipulation mode can be active at a time
+                if not self.heavy_mode:
+                    self.mass *= 2
+                    self.heavy_mode = True
+                else:
+                    self.mass /= 2
+                    self.heavy_mode = False
+                self.a_key_pressed = True
+        else:
+            self.a_key_pressed = False
+        
+        # Trigger light mode if permissions allow it
+        # Only toggle when the key is first pressed. Reset when the key is released
+        if self.permissions.get("light_mode", False) and keys[pygame.K_s]:
+            if not self.s_key_pressed and not self.heavy_mode: # One mass manipulation mode can be active at a time
+                if not self.light_mode:
+                    self.mass /= 2
+                    self.light_mode = True
+                else:
+                    self.mass *= 2
+                    self.light_mode = False
+                self.s_key_pressed = True
+        else:
+            self.s_key_pressed = False
+
+    # Setup dash timers and cancel other actions ( like the current jump, if jumping )
     def start_dash(self):
         self.dashing = True
         self.timers["dash duration"].activate()  # Start dash duration timer
@@ -76,6 +117,7 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = 0
         self.jump = False
 
+    # Handle any movement related action or ability the player might make
     def handle_player_movement(self, dt):
         if self.dashing:
             # Dash movement in the last known direction
@@ -85,7 +127,7 @@ class Player(pygame.sprite.Sprite):
             # Stop dashing when the dash duration ends
             if not self.timers["dash duration"].active:
                 self.dashing = False
-                # self.image.fill("red")
+                # self.base_image.fill("red")
         else:
             # Move and check for collision on x axis
             self.rect.x += self.direction.x * self.speed * dt
@@ -115,10 +157,19 @@ class Player(pygame.sprite.Sprite):
             self.handle_platform_movement(dt)
             self.collision("y")
 
+    # Make player move alongside the platform
     def handle_platform_movement(self, dt):
         if self.platform:
             self.rect.topleft += self.platform.direction * self.platform.speed * dt
 
+    # Make the player face the direction he last moved towards
+    def handle_orientation(self):
+        if self.last_direction.x < 0:
+            self.image = pygame.transform.flip(self.base_image, True, False)
+        elif self.last_direction.x > 0:
+            self.image = self.base_image
+
+    # Check what the player is currently in contact with ( nothing, the ground, or walls ( left, right ))
     def check_contact(self):
         ground_rect = pygame.Rect(self.rect.bottomleft, (self.rect.width, 2))
         right_rect = pygame.Rect(self.rect.topright + vector(0, self.rect.height / 4), (2, self.rect.height / 2))
@@ -148,6 +199,7 @@ class Player(pygame.sprite.Sprite):
         if left_rect.collidelist(collide_rects) >= 0:
             self.on_surface["left"] = True
 
+    # Check collisions between player and anything else
     def collision(self, axis):
         for sprite in self.collision_sprites:
             if sprite.rect.colliderect(self.rect):
@@ -175,9 +227,11 @@ class Player(pygame.sprite.Sprite):
 
                     self.direction.y = 0
 
+    # Update state
     def update(self, dt):
         update_timers(self)
         self.prev_rect = self.rect.copy()
         self.handle_input()
+        self.handle_orientation()
         self.handle_player_movement(dt)
         self.check_contact()

@@ -19,9 +19,11 @@ class LevelManager:
         self.current_level_index = 0
         self.current_level = self.load_level()
 
+    # Update the path to the current planet directory if all levels of the previous planet have been completed
     def update_root_path(self):
         self.root_path = join("..", "levels", f"planet_{self.current_planet_index}")
 
+    # Load planet data and return a Planet Instance
     def load_planet(self):
         self.update_root_path()
 
@@ -37,6 +39,7 @@ class LevelManager:
         # Create and return the Planet object
         return Planet(name, gravity_strength, levels)
 
+    # Load level data and return a Level Instance
     def load_level(self):
         config_path = join(self.root_path, self.current_planet.levels[self.current_level_index]["tmx_map"])
 
@@ -48,10 +51,12 @@ class LevelManager:
 
         return Level(level_data, self.callback)
 
+    # Cleanup sprites of the previous level
     def cleanup_level(self):
         self.current_level.all_sprites.empty()
         self.current_level.collision_sprites.empty()
 
+    # Callback for the next level
     def callback(self):
         # Clean up the resources of the level that was completed
         self.cleanup_level()
@@ -76,6 +81,7 @@ class LevelManager:
         # Move to the next level
         self.current_level = self.load_level()
 
+    # Run the Level Instance loaded
     def run(self, dt):
         if self.current_level:
             self.current_level.run(dt)

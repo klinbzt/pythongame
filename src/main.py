@@ -4,9 +4,14 @@ from levels.level_manager import LevelManager
 class Game:
     def __init__(self):
         pygame.init()
+
+        # Rendering
         pygame.display.set_caption("Shifting Realms")
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        # Initialize the Clock
         self.clock = pygame.time.Clock()
+
         # Initialize the LevelLoader
         self.level_manager = LevelManager()
 
