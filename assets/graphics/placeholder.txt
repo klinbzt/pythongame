@@ -1,0 +1,7 @@
+# Images
+
+Here we will store the images used throughout the project:
+-> backgrounds of the planets for the levels
+-> character models
+-> character animations ( this will be a separate dir in the player dir )
+etc.

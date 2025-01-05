@@ -1,27 +1,30 @@
-import sys
-import pygame
-from game_engine.engine import GameEngine
-from game_engine.startup import StartupScreen 
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, sheets
+from utils.settings import *
+from levels.level_manager import LevelManager
 
-def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Shifting Realms")
+class Game:
+    def __init__(self):
+        pygame.init()
+        pygame.display.set_caption("Shifting Realms")
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.clock = pygame.time.Clock()
 
-    # Mai intai punem un ecran de start-up, apoi activam engine-ul propriu-zis.
-    startupscreen = StartupScreen(screen, sheets) # sheets se afla in settings... (ar fii o idee sa-l punem altundeva :p)
-    startupscreen.run()
+        # Initialize the LevelLoader
+        self.level_manager = LevelManager()
 
-    # Start la engine-ul jocului
-    engine = GameEngine(screen)
-    engine.run()
+    def run(self):
+        while True:
+            dt = self.clock.tick(FPS) / 1000
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+            # Run the current level
+            self.level_manager.run(dt)
+
+            pygame.display.update()
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    finally:
-        pygame.quit()
-        sys.exit()
+    game = Game()
+    game.run()
