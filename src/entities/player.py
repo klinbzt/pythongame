@@ -5,7 +5,8 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos, groups, collision_sprites, planet, permissions):
         super().__init__(groups)
         self.image = pygame.Surface((64, 64))
-        self.image.fill("red")
+        self.z = Z_LAYERS['main']
+        self.image = image.load("../assets/graphics/tilesets/player.png")
         self.planet = planet
 
         # Rects
@@ -68,7 +69,6 @@ class Player(pygame.sprite.Sprite):
 
     def start_dash(self):
         self.dashing = True
-        self.image.fill("blue")
         self.timers["dash duration"].activate()  # Start dash duration timer
         self.timers["dash cooldown"].activate()  # Start cooldown timer
 
@@ -85,7 +85,7 @@ class Player(pygame.sprite.Sprite):
             # Stop dashing when the dash duration ends
             if not self.timers["dash duration"].active:
                 self.dashing = False
-                self.image.fill("red")
+                # self.image.fill("red")
         else:
             # Move and check for collision on x axis
             self.rect.x += self.direction.x * self.speed * dt
@@ -154,23 +154,23 @@ class Player(pygame.sprite.Sprite):
                 # Check collision on x axis
                 if axis == "x":
                     # Left
-                    if self.rect.left <= sprite.rect.right and self.prev_rect.left >= sprite.prev_rect.right:
+                    if self.rect.left <= sprite.rect.right and int(self.prev_rect.left) >= int (sprite.prev_rect.right):
                         self.rect.left = sprite.rect.right
 
                     # Right
-                    if self.rect.right >= sprite.rect.left and self.prev_rect.right <= sprite.prev_rect.left:
+                    if self.rect.right >= sprite.rect.left and int(self.prev_rect.right) <= int(sprite.prev_rect.left):
                         self.rect.right = sprite.rect.left
                 # Check collision on y axis
                 else:
                     # Top
-                    if self.rect.top <= sprite.rect.bottom and self.prev_rect.top >= sprite.prev_rect.bottom:
+                    if self.rect.top <= sprite.rect.bottom and int(self.prev_rect.top) >= int(sprite.prev_rect.bottom):
                         self.rect.top = sprite.rect.bottom
                         # Offset the player
                         if hasattr(sprite, "moving"):
                             self.rect.top += 6
 
                     # Bottom
-                    if self.rect.bottom >= sprite.rect.top and self.prev_rect.top <= sprite.prev_rect.top:
+                    if self.rect.bottom >= sprite.rect.top and int(self.prev_rect.top) <= int (sprite.prev_rect.top):
                         self.rect.bottom = sprite.rect.top
 
                     self.direction.y = 0

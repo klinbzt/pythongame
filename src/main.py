@@ -7,7 +7,6 @@ class Game:
         pygame.display.set_caption("Shifting Realms")
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
-
         # Initialize the LevelLoader
         self.level_manager = LevelManager()
 

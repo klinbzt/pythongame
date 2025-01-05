@@ -2,6 +2,7 @@ from utils.settings import *
 from sprites.sprite import Sprite, MovingSprite
 from entities.player import Player
 from levels.flag import Flag
+from sprites.groups import AllSprites
 
 class Level:
     def __init__(self, level_data, callback):
@@ -16,7 +17,7 @@ class Level:
         self.callback = callback
 
         # Initialize sprite groups
-        self.all_sprites = pygame.sprite.Group()
+        self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
         # Initialize level general
@@ -30,8 +31,9 @@ class Level:
         # Terrain (Tiles)
         try:
             terrain_layer = self.tmx_map.get_layer_by_name("Terrain")
+            z = Z_LAYERS["main"]
             for pos_x, pos_y, surf in terrain_layer.tiles():
-                Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, (self.all_sprites, self.collision_sprites))
+                Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, (self.all_sprites, self.collision_sprites), z)
         except ValueError:
             print("Layer 'Terrain' not found.")
 
@@ -69,11 +71,19 @@ class Level:
                     self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback)
         except ValueError:
             print("Layer 'Objects' not found.")
+        
+        try:
+            decorations_layer = self.tmx_map.get_layer_by_name("Decorations")
+            z = Z_LAYERS["fg"]
+            for pos_x, pos_y, surf in decorations_layer.tiles():
+                Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, self.all_sprites, z)
+        except ValueError:
+            print("Layer 'Decorations' not found.")
 
     def run(self, dt):
         self.screen.fill(BLACK)
         self.all_sprites.update(dt)
-        self.all_sprites.draw(self.screen)
+        self.all_sprites.draw(self.player.rect.center)
 
         # Check for collision between player and flag
         if self.flag:

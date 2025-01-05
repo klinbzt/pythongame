@@ -1,19 +1,21 @@
 from utils.settings import *
 
 class Sprite(pygame.sprite.Sprite):
-	def __init__(self, pos, surf = pygame.Surface((TILE_SIZE, TILE_SIZE)), groups = None):
+	def __init__(self, pos, surf = pygame.Surface((TILE_SIZE, TILE_SIZE)), groups = None, z = Z_LAYERS['main']):
 		super().__init__(groups)
 		self.image = surf
-		self.image.fill(WHITE)
+		# self.image.fill(WHITE)
 
 		# Rects
 		self.rect = self.image.get_rect(topleft = pos)
 		self.prev_rect = self.rect.copy()
+		self.z = z
 
 class MovingSprite(Sprite):
 	def __init__(self, groups, start_pos, end_pos, move_direction, speed):
 		surf = pygame.Surface((192, 32))
 		super().__init__(start_pos, surf, groups)
+		self.image = image.load("../assets/graphics/tilesets/platforms.png")
 		if move_direction == "x":
 			self.rect.midleft = start_pos
 		else:
