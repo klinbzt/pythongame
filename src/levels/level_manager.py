@@ -12,12 +12,13 @@ class LevelManager:
         self.root_path = None
 
         # Current Planet
-        self.current_planet_index = 0
+        self.current_planet_index = 1
         self.current_planet = self.load_planet()
 
         # Current Level
         self.current_level_index = 0
         self.current_level = self.load_level()
+        self.running = True
 
     # Update the path to the current planet directory if all levels of the previous planet have been completed
     def update_root_path(self):
@@ -83,5 +84,5 @@ class LevelManager:
 
     # Run the Level Instance loaded
     def run(self, dt):
-        if self.current_level:
+         if self.current_level:
             self.current_level.run(dt)

@@ -12,7 +12,8 @@ class Player(pygame.sprite.Sprite):
 
         # Rects
         self.rect = self.base_image.get_rect(topleft = pos)
-        self.prev_rect = self.rect.copy()
+        self.hitbox_rect = self.rect.inflate(-40, -4)
+        self.prev_rect = self.hitbox_rect.copy()
 
         # Movements
         self.planet = planet
@@ -46,12 +47,15 @@ class Player(pygame.sprite.Sprite):
         # Permissions
         self.permissions = permissions
 
+        # State
+        self.alive = True
+
         # Timers
         self.timers = {
             "wall jump": Timer(400),
             "wall slide block": Timer(250),
             "dash cooldown": Timer(1000),
-            "dash duration": Timer(200)
+            "dash duration": Timer(200),
         }
 
     # Handle input
@@ -121,8 +125,9 @@ class Player(pygame.sprite.Sprite):
     def handle_player_movement(self, dt):
         if self.dashing:
             # Dash movement in the last known direction
-            self.rect.x += self.last_direction.x * self.dash_speed * dt
+            self.hitbox_rect.x += self.last_direction.x * self.dash_speed * dt
             self.collision("x")
+            self.rect.center = self.hitbox_rect.center
 
             # Stop dashing when the dash duration ends
             if not self.timers["dash duration"].active:
@@ -130,9 +135,9 @@ class Player(pygame.sprite.Sprite):
                 # self.base_image.fill("red")
         else:
             # Move and check for collision on x axis
-            self.rect.x += self.direction.x * self.speed * dt
+            self.hitbox_rect.x += self.direction.x * self.speed * dt
             self.collision("x")
-
+            self.rect.center = self.hitbox_rect.center
             # Apply gravity or wall slide physics if conditions are met
             if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])) and self.permissions.get("wall_slide", False) and not self.timers["wall slide block"].active:
                 self.planet.apply_gravity_on_wall_slide(self, dt)
@@ -156,11 +161,12 @@ class Player(pygame.sprite.Sprite):
 
             self.handle_platform_movement(dt)
             self.collision("y")
+            self.rect.center = self.hitbox_rect.center
 
     # Make player move alongside the platform
     def handle_platform_movement(self, dt):
         if self.platform:
-            self.rect.topleft += self.platform.direction * self.platform.speed * dt
+            self.hitbox_rect.topleft += self.platform.direction * self.platform.speed * dt
 
     # Make the player face the direction he last moved towards
     def handle_orientation(self):
@@ -171,9 +177,9 @@ class Player(pygame.sprite.Sprite):
 
     # Check what the player is currently in contact with ( nothing, the ground, or walls ( left, right ))
     def check_contact(self):
-        ground_rect = pygame.Rect(self.rect.bottomleft, (self.rect.width, 2))
-        right_rect = pygame.Rect(self.rect.topright + vector(0, self.rect.height / 4), (2, self.rect.height / 2))
-        left_rect = pygame.Rect((self.rect.topleft + vector(-2, self.rect.height / 4)), (2, self.rect.height / 2))
+        ground_rect = pygame.Rect(self.hitbox_rect.bottomleft, (self.hitbox_rect.width, 2))
+        right_rect = pygame.Rect(self.hitbox_rect.topright + vector(0, self.hitbox_rect.height / 4), (2, self.hitbox_rect.height / 2))
+        left_rect = pygame.Rect((self.hitbox_rect.topleft + vector(-2, self.hitbox_rect.height / 4)), (2, self.hitbox_rect.height / 2))
 
         collide_rects = [sprite.rect for sprite in self.collision_sprites]
 
@@ -202,36 +208,43 @@ class Player(pygame.sprite.Sprite):
     # Check collisions between player and anything else
     def collision(self, axis):
         for sprite in self.collision_sprites:
-            if sprite.rect.colliderect(self.rect):
+            if sprite.rect.colliderect(self.hitbox_rect):
                 # Check collision on x axis
                 if axis == "x":
                     # Left
-                    if self.rect.left <= sprite.rect.right and int(self.prev_rect.left) >= int (sprite.prev_rect.right):
-                        self.rect.left = sprite.rect.right
+                    if self.hitbox_rect.left <= sprite.rect.right and int(self.prev_rect.left) >= int (sprite.prev_rect.right):
+                        self.hitbox_rect.left = sprite.rect.right
 
                     # Right
-                    if self.rect.right >= sprite.rect.left and int(self.prev_rect.right) <= int(sprite.prev_rect.left):
-                        self.rect.right = sprite.rect.left
+                    if self.hitbox_rect.right >= sprite.rect.left and int(self.prev_rect.right) <= int(sprite.prev_rect.left):
+                        self.hitbox_rect.right = sprite.rect.left
                 # Check collision on y axis
                 else:
                     # Top
-                    if self.rect.top <= sprite.rect.bottom and int(self.prev_rect.top) >= int(sprite.prev_rect.bottom):
-                        self.rect.top = sprite.rect.bottom
+                    if self.hitbox_rect.top <= sprite.rect.bottom and int(self.prev_rect.top) >= int(sprite.prev_rect.bottom):
+                        self.hitbox_rect.top = sprite.rect.bottom
                         # Offset the player
                         if hasattr(sprite, "moving"):
-                            self.rect.top += 6
+                            self.hitbox_rect.top += 6
 
                     # Bottom
-                    if self.rect.bottom >= sprite.rect.top and int(self.prev_rect.top) <= int (sprite.prev_rect.top):
-                        self.rect.bottom = sprite.rect.top
+                    if self.hitbox_rect.bottom >= sprite.rect.top and int(self.prev_rect.top) <= int (sprite.prev_rect.top):
+                        self.hitbox_rect.bottom = sprite.rect.top
 
                     self.direction.y = 0
+
+                # If it touches a damage object, it dies
+                if getattr(sprite, 'damage', True):
+                    self.alive = False
 
     # Update state
     def update(self, dt):
         update_timers(self)
-        self.prev_rect = self.rect.copy()
-        self.handle_input()
-        self.handle_orientation()
-        self.handle_player_movement(dt)
-        self.check_contact()
+        if self.hitbox_rect.bottom > 3000:
+            self.alive = False
+        if self.alive:
+            self.prev_rect = self.hitbox_rect.copy()
+            self.handle_input()
+            self.handle_orientation()
+            self.handle_player_movement(dt)
+            self.check_contact()

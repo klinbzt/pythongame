@@ -6,6 +6,9 @@ from sprites.groups import AllSprites
 
 class Level:
     def __init__(self, level_data, callback):
+        self.reset(level_data, callback)
+
+    def reset(self, level_data, callback):
         self.screen = pygame.display.get_surface()
 
         # Level data
@@ -37,6 +40,16 @@ class Level:
                 Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, (self.all_sprites, self.collision_sprites), z)
         except ValueError:
             print("Layer 'Terrain' not found.")
+        
+        # Damage Tiles
+        try:
+            damage_terrain_layer = self.tmx_map.get_layer_by_name("Damage_Terrain")
+            z = Z_LAYERS["main"]
+            for pos_x, pos_y, surf in damage_terrain_layer.tiles():
+                damage_sprite = Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf,(self.all_sprites, self.collision_sprites))
+                damage_sprite.damage = True
+        except ValueError:
+            print("Layer 'Damage_Terrain' not found.")
 
         # Moving Objects
         try:
@@ -81,11 +94,22 @@ class Level:
         except ValueError:
             print("Layer 'Decorations' not found.")
 
+    # It shows wasted and ends the game
+    def die(self):
+            font = pygame.font.Font(None, 120)
+            text = font.render("WASTED", True, (255, 0, 0))
+            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+            self.screen.blit(text, text_rect)
+            pygame.display.update()
+            pygame.time.wait(1000)
+            pygame.quit()
+            exit() 
+
     def run(self, dt):
         self.screen.fill(BLACK)
         self.all_sprites.update(dt)
-        self.all_sprites.draw(self.player.rect.center)
-
-        # Check for collision between player and flag
+        self.all_sprites.draw(self.player.hitbox_rect.center)
+        if self.player.alive == False:
+            self.die()
         if self.flag:
             self.flag.check_collision(self.player)
