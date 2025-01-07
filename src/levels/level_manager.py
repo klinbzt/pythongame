@@ -12,7 +12,7 @@ class LevelManager:
         self.root_path = None
 
         # Current Planet
-        self.current_planet_index = 1
+        self.current_planet_index = 0
         self.current_planet = self.load_planet()
 
         # Current Level

@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
 
         # Rects
         self.rect = self.base_image.get_rect(topleft = pos)
-        self.hitbox_rect = self.rect.inflate(-40, -4)
+        self.hitbox_rect = self.rect.inflate(-40, -8)
         self.prev_rect = self.hitbox_rect.copy()
 
         # Movements
@@ -38,6 +38,10 @@ class Player(pygame.sprite.Sprite):
         # Mass manipulation - light
         self.light_mode = False
         self.s_key_pressed = False
+
+        self.heavy_mode_image = image.load("../assets/graphics/ui/heavy_mode.png").convert_alpha()
+        self.light_mode_image = image.load("../assets/graphics/ui/light_mode.png").convert_alpha()
+        self.display_mode_timer = Timer(2000)
 
         # Collision handling
         self.collision_sprites = collision_sprites
@@ -90,6 +94,7 @@ class Player(pygame.sprite.Sprite):
                 if not self.heavy_mode:
                     self.mass *= 2
                     self.heavy_mode = True
+                    self.display_mode_timer.activate()
                 else:
                     self.mass /= 2
                     self.heavy_mode = False
@@ -104,6 +109,7 @@ class Player(pygame.sprite.Sprite):
                 if not self.light_mode:
                     self.mass /= 2
                     self.light_mode = True
+                    self.display_mode_timer.activate()
                 else:
                     self.mass *= 2
                     self.light_mode = False
@@ -240,7 +246,7 @@ class Player(pygame.sprite.Sprite):
     # Update state
     def update(self, dt):
         update_timers(self)
-        if self.hitbox_rect.bottom > 3000:
+        if self.hitbox_rect.bottom > SCREEN_HEIGHT + 2 * TILE_SIZE:
             self.alive = False
         if self.alive:
             self.prev_rect = self.hitbox_rect.copy()
@@ -248,3 +254,8 @@ class Player(pygame.sprite.Sprite):
             self.handle_orientation()
             self.handle_player_movement(dt)
             self.check_contact()
+            if self.display_mode_timer.active:
+                if self.heavy_mode:
+                    self.screen.blit(self.heavy_mode_image, (10, 10))
+                if self.light_mode:
+                    self.screen.blit(self.light_mode_image, (10, 20))

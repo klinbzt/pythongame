@@ -6,9 +6,6 @@ from sprites.groups import AllSprites
 
 class Level:
     def __init__(self, level_data, callback):
-        self.reset(level_data, callback)
-
-    def reset(self, level_data, callback):
         self.screen = pygame.display.get_surface()
 
         # Level data
@@ -20,7 +17,7 @@ class Level:
         self.callback = callback
 
         # Initialize sprite groups
-        self.all_sprites = AllSprites()
+        self.all_sprites = AllSprites(self.tmx_map)
         self.collision_sprites = pygame.sprite.Group()
 
         # Initialize level general
@@ -32,7 +29,6 @@ class Level:
 
     # PROBLEM: On planets with high gravity, the player is rendered, but the platforms / terrain isn't all setup, so the player falls through them and off the map. Needs fixing ASAP
     def setup(self):
-        # Terrain (Tiles)
         try:
             terrain_layer = self.tmx_map.get_layer_by_name("Terrain")
             z = Z_LAYERS["main"]
@@ -94,6 +90,13 @@ class Level:
         except ValueError:
             print("Layer 'Decorations' not found.")
 
+    # Constraining the player to the map size
+    def check_constraint(self):
+        if self.player.hitbox_rect.left <= 0:
+            self.player.hitbox_rect.left = 0
+        if self.player.hitbox_rect.right > self.tmx_map.width * TILE_SIZE - TILE_SIZE:
+            self.player.hitbox_rect.left = self.tmx_map.width * TILE_SIZE - 2 * TILE_SIZE
+
     # It shows wasted and ends the game
     def die(self):
             font = pygame.font.Font(None, 120)
@@ -113,3 +116,4 @@ class Level:
             self.die()
         if self.flag:
             self.flag.check_collision(self.player)
+        self.check_constraint()
