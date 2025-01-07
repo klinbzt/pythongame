@@ -122,20 +122,14 @@ class StartupScreen:
                     if rect.collidepoint(event.pos):
                         self.handle_button_click(label)
 
+    def handle_button_click(self, label):
         if label == "Play":
             print("Play button clicked!")
             self.active = False
         elif label == "Load Game":
             print("Load Game button clicked!")
-            self.reset_screen()  # Reset the screen before running LoadGameScreen
-            self.loadgames.run()  # Run the LoadGameScreen
+            self.loadgames.run()
             # Add logic to load saved game data
         elif label == "Settings":
             print("Settings button clicked!")
             # Add logic to open the settings menu
-
-    def reset_screen(self):
-        """Reset the screen to a clean state before switching to the next screen."""
-        self.screen.fill(BLACK)
-        pygame.display.update()  # Ensure that the screen is reset properly
-        pygame.event.clear()  # Clear any previous events to prevent interference
