@@ -2,13 +2,15 @@ from utils.settings import *
 from utils.timer import *
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_sprites, planet, permissions):
+    def __init__(self, pos, groups, collision_sprites, planet, permissions, notify_level_callback):
         super().__init__(groups)
 
         # Rendering
         self.z = Z_LAYERS['main']
         self.base_image = image.load("../assets/graphics/tilesets/player.png")
         self.image = self.base_image
+
+        self.notify_level = notify_level_callback
 
         # Rects
         self.rect = self.base_image.get_rect(topleft = pos)
@@ -39,8 +41,6 @@ class Player(pygame.sprite.Sprite):
         self.light_mode = False
         self.s_key_pressed = False
 
-        self.heavy_mode_image = image.load("../assets/graphics/ui/heavy_mode.png").convert_alpha()
-        self.light_mode_image = image.load("../assets/graphics/ui/light_mode.png").convert_alpha()
         self.display_mode_timer = Timer(2000)
 
         # Collision handling
@@ -61,6 +61,9 @@ class Player(pygame.sprite.Sprite):
             "dash cooldown": Timer(1000),
             "dash duration": Timer(200),
         }
+    
+    def set_notify_callback(self, callback):
+        self.notify_mode = callback
 
     # Handle input
     def handle_input(self):
@@ -86,7 +89,8 @@ class Player(pygame.sprite.Sprite):
         # Trigger dash if permission allow it
         if self.permissions.get("dash", False) and keys[pygame.K_d] and not self.dashing and not self.timers["dash cooldown"].active:
             self.start_dash()
-
+        else:
+            self.notify_level("dash", active=False)
         # Trigger heavy mode if permissions allow it
         # Only toggle when the key is first pressed. Reset when the key is released
         if self.permissions.get("heavy_mode", False) and keys[pygame.K_a]:
@@ -94,10 +98,12 @@ class Player(pygame.sprite.Sprite):
                 if not self.heavy_mode:
                     self.mass *= 2
                     self.heavy_mode = True
+                    self.notify_level("heavy", active=True)
                     self.display_mode_timer.activate()
                 else:
                     self.mass /= 2
                     self.heavy_mode = False
+                    self.notify_level("heavy", active=False)
                 self.a_key_pressed = True
         else:
             self.a_key_pressed = False
@@ -109,10 +115,12 @@ class Player(pygame.sprite.Sprite):
                 if not self.light_mode:
                     self.mass /= 2
                     self.light_mode = True
+                    self.notify_level("light", active=True)
                     self.display_mode_timer.activate()
                 else:
                     self.mass *= 2
                     self.light_mode = False
+                    self.notify_level("light", active=False)
                 self.s_key_pressed = True
         else:
             self.s_key_pressed = False
@@ -122,6 +130,7 @@ class Player(pygame.sprite.Sprite):
         self.dashing = True
         self.timers["dash duration"].activate()  # Start dash duration timer
         self.timers["dash cooldown"].activate()  # Start cooldown timer
+        self.notify_level("dash", active=True)
 
         # Cancel any ongoing jump
         self.direction.y = 0
@@ -254,8 +263,3 @@ class Player(pygame.sprite.Sprite):
             self.handle_orientation()
             self.handle_player_movement(dt)
             self.check_contact()
-            if self.display_mode_timer.active:
-                if self.heavy_mode:
-                    self.screen.blit(self.heavy_mode_image, (10, 10))
-                if self.light_mode:
-                    self.screen.blit(self.light_mode_image, (10, 20))

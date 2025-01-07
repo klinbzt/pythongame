@@ -9,8 +9,8 @@
 				"wall_jump": true,
 				"wall_slide": true,
 				"dash": true,
-				"heavy_mode": false,
-				"light_mode": false
+				"heavy_mode": true,
+				"light_mode": true
 			}
 		},
 		{

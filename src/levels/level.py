@@ -3,7 +3,7 @@ from sprites.sprite import Sprite, MovingSprite
 from entities.player import Player
 from levels.flag import Flag
 from sprites.groups import AllSprites
-
+from utils.timer import Timer
 class Level:
     def __init__(self, level_data, callback):
         self.screen = pygame.display.get_surface()
@@ -12,6 +12,24 @@ class Level:
         self.planet = level_data["planet"]
         self.tmx_map = level_data["tmx_map"]
         self.permissions = level_data["permissions"]
+
+        self.permission_images = {
+            "dash": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
+            "heavy": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
+            "light": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
+        }
+
+        self.permission_images_used = {
+            "dash": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
+            "heavy": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
+            "light": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
+        }   
+
+        self.permission_timers = {
+            "dash": Timer(1000),
+            "heavy": Timer(1000),
+            "light": Timer(1000),
+        }
 
         # Callback
         self.callback = callback
@@ -27,6 +45,23 @@ class Level:
         # Setup the level
         self.setup()
 
+    def notify(self, mode, active):
+        if active:
+            self.permission_timers[mode].activate()
+        else:
+            self.permission_timers[mode].deactivate()
+    # PROBLEM (Antonio) When you have no permission for the action you should not display the photo, but it does
+    def draw_permissions(self):
+        x_offset = 10
+        for mode, image in self.permission_images.items():
+            if self.permission_timers[mode].active:
+                active_image = self.permission_images_used[mode]
+            else:
+                active_image = image
+            if mode == "dash" and self.player.timers["dash cooldown"].active:
+                active_image = self.permission_images_used[mode]
+            self.screen.blit(active_image, (x_offset, 10))
+            x_offset += active_image.get_width() + 10
     # PROBLEM: On planets with high gravity, the player is rendered, but the platforms / terrain isn't all setup, so the player falls through them and off the map. Needs fixing ASAP
     def setup(self):
         try:
@@ -75,7 +110,7 @@ class Level:
             for obj in objects_layer:
                 if obj.name == "player":
                     # Create the player
-                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions)
+                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions, self.notify)
                 if obj.name == "flag":
                     # Create the flag
                     self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback)
@@ -117,3 +152,4 @@ class Level:
         if self.flag:
             self.flag.check_collision(self.player)
         self.check_constraint()
+        self.draw_permissions()
