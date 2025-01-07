@@ -9,17 +9,22 @@ class Player(pygame.sprite.Sprite):
         self.planet = planet
 
         # Rects
-        self.rect = self.image.get_rect(topleft = pos)
+        self.rect = self.image.get_rect(topleft=pos)
         self.prev_rect = self.rect.copy()
+
+        # Safety check for player position
+        screen_width, screen_height = pygame.display.get_surface().get_size()
+        if not (0 <= pos[0] <= screen_width and 0 <= pos[1] <= screen_height):
+            raise ValueError(f"Player position {pos} is out of screen bounds!")
 
         # Movements
         self.direction = vector()
         self.speed = 200
         
-		# Jump
+        # Jump
         self.jump_height = 350
         self.jump = False
-        self.wall_jump_height_factor = 1.5 # To account for power loss on x axis movement
+        self.wall_jump_height_factor = 1.5  # To account for power loss on x-axis movement
 
         # Dash
         self.last_direction = vector(1, 0)
@@ -87,7 +92,7 @@ class Player(pygame.sprite.Sprite):
                 self.dashing = False
                 self.image.fill("red")
         else:
-            # Move and check for collision on x axis
+            # Move and check for collision on x-axis
             self.rect.x += self.direction.x * self.speed * dt
             self.collision("x")
 
@@ -114,6 +119,12 @@ class Player(pygame.sprite.Sprite):
 
             self.handle_platform_movement(dt)
             self.collision("y")
+
+        # Safety check: Keep player in bounds
+        screen_rect = pygame.display.get_surface().get_rect()
+        if not screen_rect.contains(self.rect):
+            # print(f"Warning: Player moved out of bounds: {self.rect.topleft}")
+            self.rect.clamp_ip(screen_rect)  # Clamp to screen bounds
 
     def handle_platform_movement(self, dt):
         if self.platform:
@@ -151,7 +162,7 @@ class Player(pygame.sprite.Sprite):
     def collision(self, axis):
         for sprite in self.collision_sprites:
             if sprite.rect.colliderect(self.rect):
-                # Check collision on x axis
+                # Check collision on x-axis
                 if axis == "x":
                     # Left
                     if self.rect.left <= sprite.rect.right and self.prev_rect.left >= sprite.prev_rect.right:
@@ -160,7 +171,7 @@ class Player(pygame.sprite.Sprite):
                     # Right
                     if self.rect.right >= sprite.rect.left and self.prev_rect.right <= sprite.prev_rect.left:
                         self.rect.right = sprite.rect.left
-                # Check collision on y axis
+                # Check collision on y-axis
                 else:
                     # Top
                     if self.rect.top <= sprite.rect.bottom and self.prev_rect.top >= sprite.prev_rect.bottom:

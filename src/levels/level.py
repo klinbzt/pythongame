@@ -71,10 +71,12 @@ class Level:
             print("Layer 'Objects' not found.")
 
     def run(self, dt):
+        # print("Run din level")
         self.screen.fill(BLACK)
         self.all_sprites.update(dt)
         self.all_sprites.draw(self.screen)
 
+        pygame.display.update()
         # Check for collision between player and flag
         if self.flag:
             self.flag.check_collision(self.player)

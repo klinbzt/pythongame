@@ -5,12 +5,12 @@ from utils.settings import *
 from ui.loadgame import *
 
 class StartupScreen:
-    def __init__(self, screen):
-        self.screen = screen
+    def __init__(self, level_manager):
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.active = True
         self.clock = pygame.time.Clock()
 
-        self.loadgames = LoadGameScreen(self.screen)
+        self.loadgames = LoadGame(self.screen, level_manager)
         # Button dimensions and gap
         self.button_width = 250
         self.button_height = 80
@@ -128,7 +128,8 @@ class StartupScreen:
             self.active = False
         elif label == "Load Game":
             print("Load Game button clicked!")
-            self.loadgames.run()
+            if self.loadgames.run() == False:
+                self.active = False
             # Add logic to load saved game data
         elif label == "Settings":
             print("Settings button clicked!")
