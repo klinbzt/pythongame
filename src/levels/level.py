@@ -15,20 +15,20 @@ class Level:
 
         self.permission_images = {
             "dash": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
-            "heavy": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
-            "light": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
+            "heavy_mode": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
+            "light_mode": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
         }
 
         self.permission_images_used = {
             "dash": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
-            "heavy": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
-            "light": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
+            "heavy_mode": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
+            "light_mode": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
         }   
 
         self.permission_timers = {
             "dash": Timer(1000),
-            "heavy": Timer(1000),
-            "light": Timer(1000),
+            "heavy_mode": Timer(1000),
+            "light_mode": Timer(1000),
         }
 
         # Callback
@@ -50,18 +50,22 @@ class Level:
             self.permission_timers[mode].activate()
         else:
             self.permission_timers[mode].deactivate()
+
     # PROBLEM (Antonio) When you have no permission for the action you should not display the photo, but it does
+    # Solved - check the actual permissions (self.permissions). Renamed the modes and used an if to check
     def draw_permissions(self):
         x_offset = 10
         for mode, image in self.permission_images.items():
-            if self.permission_timers[mode].active:
-                active_image = self.permission_images_used[mode]
-            else:
-                active_image = image
-            if mode == "dash" and self.player.timers["dash cooldown"].active:
-                active_image = self.permission_images_used[mode]
-            self.screen.blit(active_image, (x_offset, 10))
-            x_offset += active_image.get_width() + 10
+            if self.permissions[mode]:
+                if self.permission_timers[mode].active:
+                    active_image = self.permission_images_used[mode]
+                else:
+                    active_image = image
+                if mode == "dash" and self.player.timers["dash cooldown"].active:
+                    active_image = self.permission_images_used[mode]
+                self.screen.blit(active_image, (x_offset, 10))
+                x_offset += active_image.get_width() + 10
+
     # PROBLEM: On planets with high gravity, the player is rendered, but the platforms / terrain isn't all setup, so the player falls through them and off the map. Needs fixing ASAP
     def setup(self):
         try:

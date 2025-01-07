@@ -98,12 +98,12 @@ class Player(pygame.sprite.Sprite):
                 if not self.heavy_mode:
                     self.mass *= 2
                     self.heavy_mode = True
-                    self.notify_level("heavy", active=True)
+                    self.notify_level("heavy_mode", active=True)
                     self.display_mode_timer.activate()
                 else:
                     self.mass /= 2
                     self.heavy_mode = False
-                    self.notify_level("heavy", active=False)
+                    self.notify_level("heavy_mode", active=False)
                 self.a_key_pressed = True
         else:
             self.a_key_pressed = False
@@ -115,12 +115,12 @@ class Player(pygame.sprite.Sprite):
                 if not self.light_mode:
                     self.mass /= 2
                     self.light_mode = True
-                    self.notify_level("light", active=True)
+                    self.notify_level("light_mode", active=True)
                     self.display_mode_timer.activate()
                 else:
                     self.mass *= 2
                     self.light_mode = False
-                    self.notify_level("light", active=False)
+                    self.notify_level("light_mode", active=False)
                 self.s_key_pressed = True
         else:
             self.s_key_pressed = False
