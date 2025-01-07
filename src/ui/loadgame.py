@@ -65,15 +65,16 @@ class LoadGame:
 
     def run(self):
         self.active = True
-        self.load_saved_games()
+        
         while self.active:
+            self.load_saved_games()
             self.handle_events()
             self.render()
             self.clock.tick(FPS)
             pygame.display.update()
 
-        # if self.back or self.getoldsave:
-        #     return True
+        if self.back:
+            return True
         return False
 
     def render(self):
@@ -222,12 +223,22 @@ class LoadGame:
             print(f"Save file {save_file} not found!")
         except json.JSONDecodeError:
             print(f"Failed to load {save_file}: Invalid JSON format.")
-
+    
     def delete_game(self, save_file):
         save_path = os.path.join(self.saved_games_dir, save_file)
         try:
             os.remove(save_path)
             print(f"Deleted {save_file}")
-            self.load_saved_games()  # Refresh the saved game list
+
+            # Refresh the saved games list and reset the screen
+            self.saved_game_buttons.clear()  # Clear the existing saved game buttons
+            self.delete_buttons.clear()      # Clear the delete button list
+            self.load_saved_games()          # Reload saved games
+            self.confirm_delete = False      # Close the confirmation popup
+            
+            # Re-render the updated saved games screen
+            self.render()
+
         except FileNotFoundError:
             print(f"{save_file} not found for deletion.")
+
