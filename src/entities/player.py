@@ -7,13 +7,28 @@ class Player(pygame.sprite.Sprite):
 
         # Rendering
         self.z = Z_LAYERS['main']
-        self.base_image = image.load("../assets/graphics/tilesets/player.png")
-        self.image = self.base_image
 
+        # Player Animations
+        self.sprite_sheet = pygame.image.load("../assets/graphics/tilesets/animated_player.png").convert_alpha()
+        self.frame_width = 64
+        self.frame_height = 64
+        self.animations = self.load_animations()
+        self.current_animation = 'idle'
+        self.current_frame = 0
+        self.animation_speed = 0.1
+        self.animation_timer = 0
+
+        # Player State
+        self.alive = True
+        self.image = self.animations[self.current_animation][self.current_frame]
+        self.rect = self.image.get_rect(topleft=pos)
+        self.facing_right = True
+
+        # Level State
         self.notify_level = notify_level_callback
 
         # Rects
-        self.rect = self.base_image.get_rect(topleft = pos)
+        self.rect = self.image.get_rect(topleft = pos)
         self.hitbox_rect = self.rect.inflate(-40, -8)
         self.prev_rect = self.hitbox_rect.copy()
 
@@ -41,8 +56,6 @@ class Player(pygame.sprite.Sprite):
         self.light_mode = False
         self.s_key_pressed = False
 
-        self.display_mode_timer = Timer(2000)
-
         # Collision handling
         self.collision_sprites = collision_sprites
         self.on_surface = {"ground": False, "left": False, "right": False}
@@ -51,16 +64,79 @@ class Player(pygame.sprite.Sprite):
         # Permissions
         self.permissions = permissions
 
-        # State
-        self.alive = True
-
         # Timers
         self.timers = {
             "wall jump": Timer(400),
             "wall slide block": Timer(250),
             "dash cooldown": Timer(1000),
             "dash duration": Timer(200),
+            "display mode": Timer(2000)
         }
+
+    def load_animations(self):
+        """Extract individual frames from the sprite sheet and store them."""
+        animations = {
+            'idle': ([], 8),
+            'run': ([], 8),
+            "attack_1": ([], 4),
+            "attack_2": ([], 3),
+            "jump": ([], 4),
+            "fall": ([], 4),
+            "hit": ([], 2),
+            "death": ([], 14),
+        }
+
+        # Adjust the coordinates and sizes based on your sprite sheet
+        for row, (animation_name, (frames, frame_count)) in enumerate(animations.items()):
+            for col in range(frame_count):
+                x = col * self.frame_width
+                y = row * self.frame_height
+                frame = self.sprite_sheet.subsurface(pygame.Rect(x, y, self.frame_width, self.frame_height))
+                frames.append(frame)
+            animations[animation_name] = frames
+
+        return animations
+    
+    def handle_animation(self, dt):
+        # Update the previous animation state
+        self.previous_animation = self.current_animation
+
+        # Determine the appropriate animation based on player state
+        if not self.alive:
+            self.current_animation = 'death'
+        else:
+            if self.on_surface["ground"]:
+                if self.direction.x == 0:
+                    self.current_animation = "idle"
+                else:
+                    self.current_animation = "run"
+            else:
+                if any((self.on_surface["left"], self.on_surface["right"])):
+                    self.current_animation = "idle"
+                else:
+                    if self.direction.y < 0:
+                        self.current_animation = "jump"
+                    else:
+                        self.current_animation = "fall"
+        
+        # If the animation has changed, reset the frame to 0
+        if self.current_animation != self.previous_animation:
+            self.current_frame = 0
+
+        # Update the animation frame
+        self.animation_timer += dt
+        if self.animation_timer >= self.animation_speed:
+            self.animation_timer = 0
+            self.current_frame = (self.current_frame + 1) % len(self.animations[self.current_animation])
+
+        # Always use the original frame from the animation list
+        original_image = self.animations[self.current_animation][self.current_frame]
+
+        # Flip the image if the player is facing left
+        if not self.facing_right:
+            self.image = pygame.transform.flip(original_image, True, False)
+        else:
+            self.image = original_image
     
     def set_notify_callback(self, callback):
         self.notify_mode = callback
@@ -74,8 +150,10 @@ class Player(pygame.sprite.Sprite):
         if not self.timers["wall jump"].active:
             if keys[pygame.K_RIGHT]:
                 input_vector.x += 1
+                self.facing_right = True
             if keys[pygame.K_LEFT]:
                 input_vector.x -= 1
+                self.facing_right = False
             if input_vector:
                 self.direction.x = input_vector.normalize().x
                 self.last_direction = vector(self.direction.x, 0)  # Update last direction
@@ -99,7 +177,7 @@ class Player(pygame.sprite.Sprite):
                     self.mass *= 2
                     self.heavy_mode = True
                     self.notify_level("heavy_mode", active=True)
-                    self.display_mode_timer.activate()
+                    self.timers["display mode"].activate()
                 else:
                     self.mass /= 2
                     self.heavy_mode = False
@@ -116,7 +194,7 @@ class Player(pygame.sprite.Sprite):
                     self.mass /= 2
                     self.light_mode = True
                     self.notify_level("light_mode", active=True)
-                    self.display_mode_timer.activate()
+                    self.timers["display mode"].activate()
                 else:
                     self.mass *= 2
                     self.light_mode = False
@@ -147,7 +225,6 @@ class Player(pygame.sprite.Sprite):
             # Stop dashing when the dash duration ends
             if not self.timers["dash duration"].active:
                 self.dashing = False
-                # self.base_image.fill("red")
         else:
             # Move and check for collision on x axis
             self.hitbox_rect.x += self.direction.x * self.speed * dt
@@ -182,13 +259,6 @@ class Player(pygame.sprite.Sprite):
     def handle_platform_movement(self, dt):
         if self.platform:
             self.hitbox_rect.topleft += self.platform.direction * self.platform.speed * dt
-
-    # Make the player face the direction he last moved towards
-    def handle_orientation(self):
-        if self.last_direction.x < 0:
-            self.image = pygame.transform.flip(self.base_image, True, False)
-        elif self.last_direction.x > 0:
-            self.image = self.base_image
 
     # Check what the player is currently in contact with ( nothing, the ground, or walls ( left, right ))
     def check_contact(self):
@@ -260,6 +330,6 @@ class Player(pygame.sprite.Sprite):
         if self.alive:
             self.prev_rect = self.hitbox_rect.copy()
             self.handle_input()
-            self.handle_orientation()
             self.handle_player_movement(dt)
             self.check_contact()
+            self.handle_animation(dt)
