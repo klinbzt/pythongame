@@ -1,7 +1,7 @@
-import pygame
 import sys
+import pygame
+from pygame.math import Vector2 as vector
 from utils.settings import *
-
 class SettingsMenu:
     def __init__(self, screen):
         self.screen = screen
@@ -19,40 +19,39 @@ class SettingsMenu:
         self.default_scale = 0.85
         self.animation_speed = 0.2
 
+        # Buttons
         self.buttons = {
             "Brightness": {"hover_scale": self.default_scale, "y_offset": 0},
             "Fullscreen": {"hover_scale": self.default_scale, "y_offset": 0},
-            "Volume": {"hover_scale": self.default_scale, "y_offset": 0},
-            "Back": {"hover_scale": self.default_scale, "y_offset": 0},
+            "Volume":     {"hover_scale": self.default_scale, "y_offset": 0},
+            "Back":       {"hover_scale": self.default_scale, "y_offset": 0},
         }
-
         self.selected_button_index = 0
         self.button_list = list(self.buttons.keys())
 
-        self.recalculate_button_sizes()
+        # Use global defaults from settings.py
+        self.volume = VOLUME
+        self.brightness = BRIGHTNESS  # or just 1.0 if you don't have DEFAULT_BRIGHTNESS
 
-        # Volume control
-        self.volume = 0.5  # Default volume (50%)
-        self.volume_slider_width = 0  # Dynamically set to the button width when pressed
-        self.volume_slider_max_width = 0
-        self.volume_button_top_width = int(self.volume_slider_max_width * self.volume)
-
-        # Brightness control
-        self.brightness = 1.0  # Default brightness (100%)
-        self.brightness_slider_width = 0
-        self.brightness_slider_max_width = 0
-        self.brightness_button_top_width = int(self.brightness_slider_max_width * self.brightness)
-
-        # Initialize dragging state
+        # Slider flags
         self.volume_slider_active = False
         self.brightness_slider_active = False
+        self.mouse_held = False
+
+        self.recalculate_button_sizes()
+
+        # Apply initial volume/brightness right away (if desired)
+        pygame.mixer.music.set_volume(self.volume)
+        try:
+            pygame.display.set_gamma(self.brightness)
+        except pygame.error:
+            pass
 
     def recalculate_button_sizes(self):
-        """Recalculate button sizes and positions based on the screen size."""
         screen_width, screen_height = self.screen.get_size()
-        button_width = int(screen_width * 0.3)   # 30% of screen width
-        button_height = int(screen_height * 0.1) # 10% of screen height
-        button_gap = int(screen_height * 0.05)   # 5% of screen height
+        button_width = int(screen_width * 0.3)
+        button_height = int(screen_height * 0.1)
+        button_gap = int(screen_height * 0.05)
 
         for idx, (label, data) in enumerate(self.buttons.items()):
             data["rect"] = pygame.Rect(
@@ -62,92 +61,36 @@ class SettingsMenu:
                 button_height,
             )
 
-            # Set the volume and brightness slider widths
-            if label == "Volume":
-                self.volume_slider_width = data["rect"].width
-                self.volume_slider_max_width = self.volume_slider_width
-            elif label == "Brightness":
-                self.brightness_slider_width = data["rect"].width
-                self.brightness_slider_max_width = self.brightness_slider_width
-
     def run(self):
-        # Re-initialize in case we return from other menus
         self.__init__(self.screen)
-
         while self.active:
             self.handle_events()
             self.render()
             self.clock.tick(FPS)
             pygame.display.update()
-
         self.cleanup()
 
     def render(self):
-        # Recalculate button sizes before rendering
         self.recalculate_button_sizes()
-
-        # Fill the screen with black
         self.screen.fill(BLACK)
+        mouse_pos = pygame.mouse.get_pos()
 
-        # Render volume slider if it's active
         if self.volume_slider_active:
-            volume_button_rect = self.buttons["Volume"]["rect"]
-            # Apply the hover_scale to match the selected button size
-            scaled_width = int(volume_button_rect.width * self.buttons["Volume"]["hover_scale"])
-            slider_rect = pygame.Rect(
-                volume_button_rect.left,
-                volume_button_rect.top - 100,
-                scaled_width,
-                int(volume_button_rect.height)
+            self.draw_slider(
+                button_key="Volume",
+                slider_value=self.volume,
+                label=f"{int(self.volume * 100)}%"
             )
-            pygame.draw.rect(self.screen, PURPLE, slider_rect, border_radius=20)
 
-            # Draw the slider handle for volume
-            slider_handle_rect = pygame.Rect(
-                volume_button_rect.left,
-                volume_button_rect.top - 100,
-                self.volume_button_top_width,
-                int(volume_button_rect.height)
-            )
-            pygame.draw.rect(self.screen, LIGHT_PURPLE, slider_handle_rect, border_radius=20)
-
-            # Draw the text inside the volume slider
-            text = self.font.render(f"{int(self.volume * 100)}%", True, WHITE)
-            text_rect = text.get_rect(center=slider_rect.center)
-            self.screen.blit(text, text_rect)
-
-        # Render brightness slider if it's active
         if self.brightness_slider_active:
-            brightness_button_rect = self.buttons["Brightness"]["rect"]
-            # Apply the hover_scale to match the selected button size
-            scaled_width = int(brightness_button_rect.width * self.buttons["Brightness"]["hover_scale"])
-            slider_rect = pygame.Rect(
-                brightness_button_rect.left,
-                brightness_button_rect.top + 100,
-                scaled_width,
-                int(brightness_button_rect.height)
+            self.draw_slider(
+                button_key="Brightness",
+                slider_value=self.brightness,
+                label=f"{int(self.brightness * 100)}%"
             )
-            pygame.draw.rect(self.screen, PURPLE, slider_rect, border_radius=20)
 
-            # Draw the slider handle for brightness
-            slider_handle_rect = pygame.Rect(
-                brightness_button_rect.left,
-                brightness_button_rect.top + 100,
-                self.brightness_button_top_width,
-                int(brightness_button_rect.height)
-            )
-            pygame.draw.rect(self.screen, LIGHT_PURPLE, slider_handle_rect, border_radius=20)
-
-            # Draw the text inside the brightness slider
-            text = self.font.render(f"{int(self.brightness * 100)}%", True, WHITE)
-            text_rect = text.get_rect(center=slider_rect.center)
-            self.screen.blit(text, text_rect)
-
-        # Render other buttons with dynamic size and position
         screen_center = (self.screen.get_width() // 2, self.screen.get_height() // 2)
-
         for idx, (label, data) in enumerate(self.buttons.items()):
-            # Skip rendering the button itself if its slider is active (we draw the slider instead)
             if label == "Volume" and self.volume_slider_active:
                 continue
             if label == "Brightness" and self.brightness_slider_active:
@@ -157,7 +100,6 @@ class SettingsMenu:
             hover_scale = data["hover_scale"]
             y_offset = data["y_offset"]
 
-            # Determine target scale/offset based on selection
             if idx == self.selected_button_index:
                 target_hover_scale = self.hover_scale
                 target_y_offset = 0
@@ -167,14 +109,14 @@ class SettingsMenu:
                     rect.height + int(self.screen.get_height() * 0.05)
                 )
 
-            # Smooth transitions
+            if rect.collidepoint(mouse_pos):
+                target_hover_scale = self.hover_scale
+
             data["hover_scale"] += (target_hover_scale - hover_scale) * self.animation_speed
             data["y_offset"] += (target_y_offset - y_offset) * self.animation_speed
-
             hover_scale = data["hover_scale"]
             y_offset = data["y_offset"]
 
-            # Compute scaled rectangle
             scaled_width = int(rect.width * hover_scale)
             scaled_height = int(rect.height * hover_scale)
             scaled_rect = pygame.Rect(
@@ -184,45 +126,65 @@ class SettingsMenu:
                 scaled_height,
             )
 
-            # Draw button background
-            button_base_color = PURPLE
-            pygame.draw.rect(self.screen, button_base_color, scaled_rect, border_radius=20)
+            pygame.draw.rect(self.screen, PURPLE, scaled_rect, border_radius=20)
+            if rect.collidepoint(mouse_pos):
+                pygame.draw.rect(self.screen, self.hover_color, scaled_rect, width=4, border_radius=20)
 
-            ##
-            # 1) SLIGHT UPSCALE USING SMOOTHSCALE
-            ##
             scaled_font_size = int(40 * hover_scale)
             text_font = pygame.font.Font(None, scaled_font_size)
-            text_surface = text_font.render(label, True, (255, 255, 255))
+            text_surface = text_font.render(label, True, WHITE)
 
-            # Slightly upscale (e.g., 1.2x) for a small "pop" effect
             scale_factor = 1.2
             up_width = int(text_surface.get_width() * scale_factor)
             up_height = int(text_surface.get_height() * scale_factor)
             text_upscaled = pygame.transform.smoothscale(text_surface, (up_width, up_height))
 
-            ##
-            # 2) SIMPLE SHADOW EFFECT
-            ##
             shadow_surface = text_font.render(label, True, (0, 0, 0))
             shadow_upscaled = pygame.transform.smoothscale(shadow_surface, (up_width, up_height))
 
-            # Draw shadow offset by a couple of pixels (2, 2)
             shadow_offset = 2
             shadow_rect = shadow_upscaled.get_rect(
                 center=(scaled_rect.centerx + shadow_offset, scaled_rect.centery + shadow_offset)
             )
             self.screen.blit(shadow_upscaled, shadow_rect)
 
-            # Blit the upscaled white text on top of the shadow
             text_rect = text_upscaled.get_rect(center=scaled_rect.center)
             self.screen.blit(text_upscaled, text_rect)
 
+    def draw_slider(self, button_key, slider_value, label):
+        rect_data = self.buttons[button_key]
+        rect = rect_data["rect"]
+        hover_scale = rect_data["hover_scale"]
+        y_offset = rect_data["y_offset"]
+
+        screen_center = (self.screen.get_width() // 2, self.screen.get_height() // 2)
+        scaled_width = int(rect.width * hover_scale)
+        scaled_height = int(rect.height * hover_scale)
+
+        slider_rect = pygame.Rect(
+            screen_center[0] - scaled_width // 2,
+            screen_center[1] + y_offset - scaled_height // 2,
+            scaled_width,
+            scaled_height,
+        )
+
+        pygame.draw.rect(self.screen, PURPLE, slider_rect, border_radius=20)
+
+        handle_width = int(scaled_width * slider_value)
+        handle_rect = pygame.Rect(slider_rect.left, slider_rect.top, handle_width, slider_rect.height)
+        pygame.draw.rect(self.screen, LIGHT_PURPLE, handle_rect, border_radius=20)
+
+        text = self.font.render(label, True, WHITE)
+        text_rect = text.get_rect(center=slider_rect.center)
+        self.screen.blit(text, text_rect)
+
     def handle_events(self):
+        mouse_pos = pygame.mouse.get_pos()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP and not (self.volume_slider_active or self.brightness_slider_active):
                     self.selected_button_index = (self.selected_button_index - 1) % len(self.button_list)
@@ -231,19 +193,70 @@ class SettingsMenu:
                 elif event.key == pygame.K_RETURN:
                     self.handle_button_click(self.button_list[self.selected_button_index])
                 elif event.key == pygame.K_LEFT:
-                    if self.volume_slider_active:
-                        self.volume = max(0.0, self.volume - 0.05)
-                        self.volume_button_top_width = int(self.volume_slider_width * self.volume)
-                    if self.brightness_slider_active:
-                        self.brightness = max(0.0, self.brightness - 0.05)
-                        self.brightness_button_top_width = int(self.brightness_slider_width * self.brightness)
+                    self.adjust_slider(-0.05)
                 elif event.key == pygame.K_RIGHT:
-                    if self.volume_slider_active:
-                        self.volume = min(1.0, self.volume + 0.05)
-                        self.volume_button_top_width = int(self.volume_slider_width * self.volume)
-                    if self.brightness_slider_active:
-                        self.brightness = min(1.0, self.brightness + 0.05)
-                        self.brightness_button_top_width = int(self.brightness_slider_width * self.brightness)
+                    self.adjust_slider(+0.05)
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left click
+                    self.mouse_held = True
+                    clicked_button = self.get_button_under_mouse(mouse_pos)
+                    if clicked_button:
+                        self.handle_button_click(clicked_button)
+                elif event.button == 4:  # Mouse wheel up
+                    self.adjust_slider(+0.05)
+                elif event.button == 5:  # Mouse wheel down
+                    self.adjust_slider(-0.05)
+
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:
+                    self.mouse_held = False
+
+            elif event.type == pygame.MOUSEMOTION:
+                if self.mouse_held:
+                    if self.volume_slider_active or self.brightness_slider_active:
+                        self.adjust_slider_by_mouse(mouse_pos)
+
+    def get_button_under_mouse(self, mouse_pos):
+        for label, data in self.buttons.items():
+            if data["rect"].collidepoint(mouse_pos):
+                return label
+        return None
+
+    def adjust_slider_by_mouse(self, mouse_pos):
+        if self.volume_slider_active:
+            self.volume = self.get_slider_value("Volume", mouse_pos)
+            pygame.mixer.music.set_volume(self.volume)
+        elif self.brightness_slider_active:
+            self.brightness = self.get_slider_value("Brightness", mouse_pos)
+            try:
+                pygame.display.set_gamma(self.brightness)
+            except pygame.error:
+                pass
+
+    def get_slider_value(self, button_key, mouse_pos):
+        rect_data = self.buttons[button_key]
+        rect = rect_data["rect"]
+        hover_scale = rect_data["hover_scale"]
+
+        screen_center = (self.screen.get_width() // 2, self.screen.get_height() // 2)
+        scaled_width = int(rect.width * hover_scale)
+        scaled_left = screen_center[0] - scaled_width // 2
+        scaled_right = scaled_left + scaled_width
+
+        clamped_x = max(scaled_left, min(mouse_pos[0], scaled_right))
+        return (clamped_x - scaled_left) / float(scaled_right - scaled_left)
+
+    def adjust_slider(self, delta):
+        if self.volume_slider_active:
+            self.volume = max(0.0, min(1.0, self.volume + delta))
+            pygame.mixer.music.set_volume(self.volume)
+        if self.brightness_slider_active:
+            self.brightness = max(0.0, min(1.0, self.brightness + delta))
+            try:
+                pygame.display.set_gamma(self.brightness)
+            except pygame.error:
+                pass
 
     def handle_button_click(self, label):
         if label == "Brightness":
@@ -257,10 +270,9 @@ class SettingsMenu:
         elif label == "Volume":
             self.volume_slider_active = not self.volume_slider_active
         elif label == "Back":
-            self.active = False  # Go back to main menu
+            self.active = False
 
     def cleanup(self):
-        """Free up resources used by the settings menu."""
         del self.font
         del self.clock
         del self.buttons
