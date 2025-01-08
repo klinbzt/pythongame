@@ -141,6 +141,3 @@ class LevelManager:
 
         if self.current_level:
             self.current_level.run(dt)
-        # elif self.loadedsave:
-
-        #     self.current_level.callback()
