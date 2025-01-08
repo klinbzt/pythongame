@@ -1,6 +1,7 @@
 import sys
 import pygame
 from pygame.math import Vector2 as vector
+from pygame import image
 
 # -----------------------------
 # GLOBAL GAME SETTINGS / CONSTANTS
@@ -10,6 +11,7 @@ from pygame.math import Vector2 as vector
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 FPS = 60
+ExitStartupFile = "./tmp"
 
 # Tile size for grid-based levels
 TILE_SIZE = 32
@@ -28,3 +30,16 @@ VOLUME = 0.5
 
 # Default brightness (range can vary by your system; commonly 0.0 to 1.0)
 BRIGHTNESS = 1.0
+
+# layer ordering
+
+Z_LAYERS = {
+	'bg': 0,
+	'clouds': 1,
+	'bg tiles': 2,
+	'path': 3,
+	'bg details': 4,
+	'main': 5,
+	'water': 6,
+	'fg': 7
+}

@@ -14,16 +14,17 @@ class LevelManager:
 
         # Current Planet
         self.current_planet_index = 0
-        self.current_planet = None
+        self.current_planet = self.load_planet()
 
         # Current Level
         self.current_level_index = 0
-        self.current_level = None
+        self.current_level = self.load_level()
         
         self.loadedsave = False
     def update_root_path(self):
         self.root_path = join("..", "levels", f"planet_{self.current_planet_index}")
 
+    # Load planet data and return a Planet Instance
     def load_planet(self):
         self.update_root_path()
 
@@ -39,6 +40,7 @@ class LevelManager:
         # Create and return the Planet object
         return Planet(name, gravity_strength, levels)
 
+    # Load level data and return a Level Instance
     def load_level(self):
         """
         Loads the current level and updates its parameters to match the saved or current game state.
@@ -60,6 +62,7 @@ class LevelManager:
         # Return a new Level instance with the updated data
         return Level(level_data, self.callback)
 
+    # Cleanup sprites of the previous level
     def cleanup_level(self):
         """
         Clear all resources associated with the current level.
@@ -68,6 +71,7 @@ class LevelManager:
             self.current_level.all_sprites.empty()
             self.current_level.collision_sprites.empty()
 
+    # Callback for the next level
     def callback(self):
         """
         Handles progression to the next level or planet after completing a level.
@@ -129,15 +133,5 @@ class LevelManager:
         """
         Run the current level, updating its logic with the given delta time.
         """
-        if self.current_level is None:
-                # If the level is not loaded, check if the planet is loaded
-                if self.current_planet is None:
-                    self.current_planet = self.load_planet()
-                
-                # After planet is loaded, load the level
-                self.current_level = self.load_level()
-
-                print("AICI?")
-
         if self.current_level:
             self.current_level.run(dt)

@@ -6,9 +6,12 @@ from ui.savegame import SaveGame
 class Game:
     def __init__(self):
         pygame.init()
-        pygame.mixer.init()
+
+        # Rendering
         pygame.display.set_caption("Shifting Realms")
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+        # Initialize the Clock
         self.clock = pygame.time.Clock()
 
         # Initialize the LevelLoader
@@ -17,7 +20,13 @@ class Game:
         self.save_game = SaveGame()
 
     def run(self):  
+
         self.startup_screen.run()
+
+        print("Alo>")
+        f = open(ExitStartupFile, "w")
+        f.write("Good")
+        f.close()
 
         while True:
             dt = self.clock.tick(FPS)/1000
