@@ -13,9 +13,8 @@ TILE_SIZE = 32
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
-
-# Startup screen
-sheets = [
-    ('../assets/graphics/intro/test_buton1.png', (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)),
-    ('../assets/graphics/intro/test_title.png', (SCREEN_WIDTH // 2 + 100, SCREEN_HEIGHT // 2 + 100))
-]
+GRAY = (169, 169, 169)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+PURPLE = (50, 50, 150)
+LIGHT_PURPLE = (50, 50, 200)

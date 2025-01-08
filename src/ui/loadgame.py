@@ -1,244 +1,207 @@
-import json
 import pygame
-import os
 import sys
+import os
+import json
 from utils.settings import *
-from ui.savegame import SaveGame
-from levels.level_manager import LevelManager
 
 
 class LoadGame:
     def __init__(self, screen, level_manager):
         self.screen = screen
+        self.level_manager = level_manager
         self.active = True
         self.back = False
         self.getoldsave = False
-        self.clock = pygame.time.Clock()
 
-        self.saved_games_dir = "saved_games"  # Directory where saved games are stored
-
-        # Button dimensions and gap
-        self.button_width = 300
-        self.button_height = 50
-        self.button_gap = 20
+        self.saved_games_dir = "saved_games"
 
         # Font and colors
-        self.font = pygame.font.Font(None, 30)
-        self.text_color = BLACK
-        self.button_color = WHITE
-        self.hover_color = WHITE
+        self.font = pygame.font.Font(None, 40)
+        self.text_color = WHITE
+        self.button_color = (45, 45, 45)
+        self.hover_color = (60, 60, 60)
+        self.delete_color = (255, 0, 0)
+        self.delete_hover_color = (255, 50, 50)  # Brighter red when delete is selected
 
-        # Define the rectangles for displaying saved game names
+        # Animation settings
+        self.animation_speed = 0.2
+        self.hover_scale = 1.2
+        self.default_scale = 1.0
+
+        # Button properties
         self.saved_game_buttons = []
-        self.delete_buttons = []  # Store delete button positions and related data
-        self.back_button_rect = None
+        self.selected_button_index = 0
+        self.on_delete_button = False  # Tracks if the red delete button is selected
 
-        # Confirmation dialog data
-        self.confirm_delete = False
-        self.selected_game = None
-        self.delete_popup_rect = None
+        # Back button
+        self.back_button = {"label": "Back", "hover_scale": self.default_scale, "y_offset": 0}
 
-        # Initialize LevelManager
-        self.level_manager = level_manager
+        # Clock for framerate
+        self.clock = pygame.time.Clock()
+
+        self.load_saved_games()
 
     def load_saved_games(self):
+        """Load all saved games and initialize buttons."""
         if not os.path.exists(self.saved_games_dir):
             os.makedirs(self.saved_games_dir)
 
-        saved_files = [
-            file for file in os.listdir(self.saved_games_dir) if file.endswith(".json")
-        ]
+        saved_files = [file for file in os.listdir(self.saved_games_dir) if file.endswith(".json")]
+        self.saved_game_buttons = [{"label": file, "hover_scale": self.default_scale, "y_offset": 0} for file in saved_files]
 
-        if not saved_files:
-            self.no_games_message = "No saved games available."
-        else:
-            self.no_games_message = None
-            for i, filename in enumerate(saved_files):
-                rect_x = (SCREEN_WIDTH - self.button_width) // 2
-                rect_y = (SCREEN_HEIGHT - len(saved_files) * (self.button_height + self.button_gap)) // 2 + i * (self.button_height + self.button_gap)
-                self.saved_game_buttons.append((filename, pygame.Rect(rect_x, rect_y, self.button_width, self.button_height)))
-
-        # Back button at the bottom
-        back_rect_x = (SCREEN_WIDTH - self.button_width) // 2
-        back_rect_y = SCREEN_HEIGHT - (self.button_height + self.button_gap)
-        self.back_button_rect = pygame.Rect(back_rect_x, back_rect_y, self.button_width, self.button_height)
+    def release_resources(self):
+        """Free up resources when finished."""
+        self.font = None
+        self.clock = None
+        self.saved_game_buttons.clear()
 
     def run(self):
-        self.active = True
-        
+        """Main loop of the load game screen."""
+        self.__init__(self.screen, self.level_manager)
+
         while self.active:
-            self.load_saved_games()
             self.handle_events()
             self.render()
             self.clock.tick(FPS)
             pygame.display.update()
 
-        if self.back:
-            return True
-        return False
+        # Free up resources once the loop ends
+        self.release_resources()
+        return self.back
 
     def render(self):
+        """Render buttons with animations."""
         self.screen.fill(BLACK)
 
-        if self.no_games_message:
-            no_games_text = self.font.render(self.no_games_message, True, WHITE)
+        if not self.saved_game_buttons:
+            # Display no games available
+            no_games_text = self.font.render("No saved games available.", True, WHITE)
             text_rect = no_games_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
             self.screen.blit(no_games_text, text_rect)
-        else:
-            for label, rect in self.saved_game_buttons:
-                pygame.draw.rect(self.screen, self.button_color, rect)  # Button background
-                text = self.font.render(label, True, self.text_color)
-                text_rect = text.get_rect(center=rect.center)
-                self.screen.blit(text, text_rect)
+            return
 
-                # Render delete button (Red square) to the right of each saved game button
-                delete_button_rect = pygame.Rect(rect.right + 10, rect.top, self.button_height, self.button_height)
-                self.delete_buttons.append((label, delete_button_rect))
-                pygame.draw.rect(self.screen, (255, 0, 0), delete_button_rect)
-                pygame.draw.line(self.screen, (255, 255, 255), (delete_button_rect.x + 10, delete_button_rect.y + 10), (delete_button_rect.x + delete_button_rect.width - 10, delete_button_rect.y + delete_button_rect.height - 10), 3)
-                pygame.draw.line(self.screen, (255, 255, 255), (delete_button_rect.x + delete_button_rect.width - 10, delete_button_rect.y + 10), (delete_button_rect.x + 10, delete_button_rect.y + delete_button_rect.height - 10), 3)
+        # Calculate layout properties
+        screen_center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+        button_gap = int(SCREEN_HEIGHT * 0.05)
+        button_height = int(SCREEN_HEIGHT * 0.1)
 
-        # Render back button
-        pygame.draw.rect(self.screen, self.button_color, self.back_button_rect)
-        back_text = self.font.render("<-", True, self.text_color)
-        back_text_rect = back_text.get_rect(center=self.back_button_rect.center)
-        self.screen.blit(back_text, back_text_rect)
+        for idx, button in enumerate(self.saved_game_buttons + [self.back_button]):
+            is_selected = idx == self.selected_button_index and not self.on_delete_button
+            target_scale = self.hover_scale if is_selected else self.default_scale
+            target_offset = 0 if is_selected else (idx - self.selected_button_index) * (button_height + button_gap)
 
-        if self.confirm_delete:
-            self.render_confirmation_popup()
+            # Smooth animations
+            button["hover_scale"] += (target_scale - button["hover_scale"]) * self.animation_speed
+            button["y_offset"] += (target_offset - button["y_offset"]) * self.animation_speed
 
-    def render_confirmation_popup(self):
-        self.screen.fill(BLACK)
-        # Calculate the text width and height
-        message = f"Are you sure you want to delete {self.selected_game}?"
-        text_surface = self.font.render(message, True, (255, 255, 255))
-        text_width, text_height = text_surface.get_size()
+            hover_scale = button["hover_scale"]
+            y_offset = button["y_offset"]
 
-        # Dynamically adjust the popup size based on text
-        popup_width = max(300, text_width + 40)  # Ensure minimum width
-        popup_height = max(200, text_height + 80)  # Ensure enough height for text and buttons
+            # Calculate button size and position
+            scaled_width = int(SCREEN_WIDTH * 0.3 * hover_scale)
+            scaled_height = int(button_height * hover_scale)
+            button_rect = pygame.Rect(
+                screen_center[0] - scaled_width // 2,
+                screen_center[1] + y_offset - scaled_height // 2,
+                scaled_width,
+                scaled_height,
+            )
 
-        self.delete_popup_rect = pygame.Rect((SCREEN_WIDTH - popup_width) // 2, (SCREEN_HEIGHT - popup_height) // 2, popup_width, popup_height)
+            # Draw button
+            color = self.hover_color if is_selected else self.button_color
+            pygame.draw.rect(self.screen, color, button_rect, border_radius=15)
 
-        # Drawing rounded corners and gradient background for the popup
-        pygame.draw.rect(self.screen, (0, 0, 0), self.delete_popup_rect, border_radius=15)
-        pygame.draw.rect(self.screen, (50, 50, 50), self.delete_popup_rect.inflate(-5, -5), border_radius=15)
+            # Render button label
+            text = self.font.render(button["label"], True, WHITE)
+            text_rect = text.get_rect(midleft=(button_rect.left + 10, button_rect.centery))
+            self.screen.blit(text, text_rect)
 
-        # Add a subtle drop shadow effect
-        shadow_rect = pygame.Rect(self.delete_popup_rect.x + 5, self.delete_popup_rect.y + 5, self.delete_popup_rect.width, self.delete_popup_rect.height)
-        pygame.draw.rect(self.screen, (0, 0, 0), shadow_rect, border_radius=15)
+            # Draw delete button next to each save button
+            if idx < len(self.saved_game_buttons):
+                delete_is_selected = idx == self.selected_button_index and self.on_delete_button
+                delete_button_scale = self.hover_scale if delete_is_selected else self.default_scale
 
-        # Render centered text
-        font = pygame.font.Font(None, 30)
-        text = font.render(f"Are you sure you want to delete {self.selected_game}?", True, (255, 255, 255))
-        text_rect = text.get_rect(center=(self.delete_popup_rect.centerx, self.delete_popup_rect.centery - 20))
-        self.screen.blit(text, text_rect)
+                delete_button_size = int(scaled_height * 0.6 * delete_button_scale)
+                delete_button_rect = pygame.Rect(
+                    button_rect.right + 10,
+                    button_rect.centery - delete_button_size // 2,
+                    delete_button_size,
+                    delete_button_size,
+                )
 
-        # Draw confirmation buttons with styling
-        yes_button = pygame.Rect(self.delete_popup_rect.centerx - 75, self.delete_popup_rect.bottom - 50, 150, 40)
-        no_button = pygame.Rect(self.delete_popup_rect.centerx - 75, self.delete_popup_rect.bottom - 100, 150, 40)
+                delete_color = self.delete_hover_color if delete_is_selected else self.delete_color
+                pygame.draw.rect(self.screen, delete_color, delete_button_rect, border_radius=8)
 
-        # Button colors and hover effects
-        pygame.draw.rect(self.screen, (0, 255, 0), yes_button, border_radius=10)  # Green button for 'Yes'
-        pygame.draw.rect(self.screen, (255, 0, 0), no_button, border_radius=10)  # Red button for 'No'
-
-        # Add text to buttons
-        yes_text = font.render("Yes", True, (0, 0, 0))
-        no_text = font.render("No", True, (0, 0, 0))
-
-        self.screen.blit(yes_text, yes_button)
-        self.screen.blit(no_text, no_button)
+                # Store delete button rect for collision detection
+                button["delete_rect"] = delete_button_rect
 
     def handle_events(self):
+        """Handle keyboard and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pygame.quit()
                 sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    if self.on_delete_button:
+                        self.on_delete_button = False
+                    else:
+                        self.selected_button_index = (self.selected_button_index - 1) % (len(self.saved_game_buttons) + 1)
+                elif event.key == pygame.K_DOWN:
+                    if self.on_delete_button:
+                        self.on_delete_button = False
+                    else:
+                        self.selected_button_index = (self.selected_button_index + 1) % (len(self.saved_game_buttons) + 1)
+                elif event.key == pygame.K_RIGHT:
+                    if self.selected_button_index < len(self.saved_game_buttons):
+                        self.on_delete_button = not self.on_delete_button
+                elif event.key == pygame.K_LEFT:
+                    if self.on_delete_button:
+                        self.on_delete_button = False
+                elif event.key == pygame.K_RETURN:
+                    if self.on_delete_button:
+                        self.delete_game(self.saved_game_buttons[self.selected_button_index]["label"])
+                    elif self.selected_button_index == len(self.saved_game_buttons):
+                        self.active = False  # Back button selected
+                        self.back = True
+                    else:
+                        self.load_game(self.saved_game_buttons[self.selected_button_index]["label"])
+                elif event.key == pygame.K_BACKSPACE:
+                    self.active = False
+                    self.back = True
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left mouse button
+                    mouse_pos = event.pos
+                    for idx, button in enumerate(self.saved_game_buttons):
+                        button_rect = pygame.Rect(
+                            SCREEN_WIDTH // 2 - (SCREEN_WIDTH * 0.3 * button["hover_scale"] // 2),
+                            SCREEN_HEIGHT // 2 + button["y_offset"] - (SCREEN_HEIGHT * 0.1 * button["hover_scale"] // 2),
+                            SCREEN_WIDTH * 0.3 * button["hover_scale"],
+                            SCREEN_HEIGHT * 0.1 * button["hover_scale"]
+                        )
+                        if button_rect.collidepoint(mouse_pos):
+                            self.load_game(button["label"])
+                        elif "delete_rect" in button and button["delete_rect"].collidepoint(mouse_pos):
+                            self.delete_game(button["label"])
 
-            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                for label, delete_button_rect in self.delete_buttons:
-                    if delete_button_rect.collidepoint(event.pos):
-                        self.selected_game = label
-                        self.confirm_delete = True
-                        return  # Exit to allow confirmation dialog
-
-                if self.confirm_delete:
-                    # Handle "Yes" and "No" clicks for deletion confirmation
-                    yes_button_rect = pygame.Rect(self.delete_popup_rect.centerx - 75, self.delete_popup_rect.bottom - 50, 150, 40)
-                    no_button_rect = pygame.Rect(self.delete_popup_rect.centerx - 75, self.delete_popup_rect.bottom - 100, 150, 40)
-
-                    if yes_button_rect.collidepoint(event.pos):
-                        self.delete_game(self.selected_game)
-                        self.confirm_delete = False
-                    elif no_button_rect.collidepoint(event.pos):
-                        self.confirm_delete = False
-                        self.selected_game = None
-
-                # Handle back and saved game load clicks
-                for label, rect in self.saved_game_buttons + [("Back", self.back_button_rect)]:
-                    if rect.collidepoint(event.pos):
-                        self.handle_button_click(label)
-
-    def handle_button_click(self, label):
-        if label == "Back":
-            self.active = False  # Close this screen and return to the previous screen
-            self.back = True
-        elif label.endswith(".json"):  # Only load valid saved game files
-            self.load_old_game_data(label)
-            self.active = False  # Close the screen after loading a game
-            self.getoldsave = True
-    
-    def load_old_game_data(self, save_file):
+    def load_game(self, save_file):
+        """Load a selected game."""
         save_path = os.path.join(self.saved_games_dir, save_file)
-
         try:
-            with open(save_path, 'r') as file:
+            with open(save_path, "r") as file:
                 save_data = json.load(file)
+            self.level_manager.load_save_info(save_data)
+            self.active = False
+            self.getoldsave = True
+        except Exception as e:
+            print(f"Error loading game {save_file}: {e}")
 
-            # Extract saved game data
-            current_planet_index = save_data.get("current_planet_index", 0)
-            current_level_index = save_data.get("current_level_index", 0)
-            planet_name = save_data.get("planet_name", "Unknown")
-
-            permissions = save_data.get("permissions", "default_permission")
-            gravity_strength = save_data.get("gravity_strength", 1.0)
-            tmx_map = save_data.get("tmx_map", "default_map")
-
-            print(f"Resuming game: Planet {planet_name}, Level {current_level_index}")
-            print(f"Permissions: {permissions}, Gravity: {gravity_strength}, TMX Map: {tmx_map}")
-
-            save_info = {
-                "current_planet_index": current_planet_index,
-                "current_level_index": current_level_index,
-                "planet_name": planet_name,
-                "permissions": permissions,
-                "gravity_strength": gravity_strength,
-                "tmx_map": tmx_map,
-            }
-
-            # Load game state into LevelManager
-            print("Load game state into LevelManager")
-            self.level_manager.load_save_info(save_info)
-
-        except FileNotFoundError:
-            print(f"Save file {save_file} not found!")
-        except json.JSONDecodeError:
-            print(f"Failed to load {save_file}: Invalid JSON format.")
-    
     def delete_game(self, save_file):
+        """Delete the selected save file."""
         save_path = os.path.join(self.saved_games_dir, save_file)
         try:
             os.remove(save_path)
-            print(f"Deleted {save_file}")
-
-            # Refresh the saved games list and reset the screen
-            self.saved_game_buttons.clear()  # Clear the existing saved game buttons
-            self.delete_buttons.clear()      # Clear the delete button list
-            self.load_saved_games()          # Reload saved games
-            self.confirm_delete = False      # Close the confirmation popup
-            
-            # Re-render the updated saved games screen
-            self.render()
-
-        except FileNotFoundError:
-            print(f"{save_file} not found for deletion.")
-
+            print(f"Deleted save file: {save_file}")
+            self.load_saved_games()  # Refresh the button list
+        except Exception as e:
+            print(f"Error deleting game {save_file}: {e}")
