@@ -16,8 +16,8 @@ class Game:
 
         # Initialize the LevelLoader
         self.level_manager = LevelManager()
-        self.startup_screen = StartupScreen(self.level_manager)
-        self.save_game = SaveGame()
+        self.startup_screen = StartupScreen(self.level_manager, self.clock)
+        self.save_game = SaveGame(self.clock)
 
     def run(self):  
 

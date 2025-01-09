@@ -1,43 +1,60 @@
-import pygame
 import sys
-from utils.settings import *
-from ui.loadgame import *
+import pygame
+from utils.settings import * 
 from ui.menusettings import SettingsMenu
+from ui.loadgame import LoadGame
 
 class StartupScreen:
-    def __init__(self, level_manager):
+    def __init__(self, level_manager, clock):
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
         self.active = True
-        self.clock = pygame.time.Clock()
+        self.clock = clock
 
+        texture_image = pygame.image.load("../assets/graphics/tilesets/extra.png").convert_alpha()
+
+        texture_coords = (0, 256, 128, 128)
+
+        self.button_texture_gray = texture_image.subsurface(pygame.Rect(*texture_coords))
         # Preload resources
-        self.background_image = pygame.image.load("../assets/graphics/intro/startupbrackground.png").convert()
-        self.font = pygame.font.Font(None, 40)
+        self.background_image_original = pygame.image.load("../assets/graphics/intro/startupbrackground.png").convert()
 
+        # Scaled background placeholder
+        self.background_image_scaled = None
+
+        # Fonts
+        self.font_cache = {}
+        self.base_font_size = 40
+
+        # External screens
         self.loadgames = LoadGame(self.screen, level_manager)
         self.settings = SettingsMenu(self.screen)
+
+        # Animation settings
         self.animation_speed = 0.2
         self.hover_scale = 1.2
         self.default_scale = 1.0
 
-        # Initialize button properties
+        # Buttons with the texture from settings.py
         self.buttons = {
-            "Play": {"hover_scale": self.default_scale, "y_offset": 0},
-            "Load Game": {"hover_scale": self.default_scale, "y_offset": 0},
-            "Settings": {"hover_scale": self.default_scale, "y_offset": 0},
+            "Play": {"hover_scale": self.default_scale, "y_offset": 0, "texture": self.button_texture_gray},
+            "Load Game": {"hover_scale": self.default_scale, "y_offset": 0, "texture": self.button_texture_gray},
+            "Settings": {"hover_scale": self.default_scale, "y_offset": 0, "texture": self.button_texture_gray},
         }
 
         self.selected_button_index = 0
         self.button_list = list(self.buttons.keys())
+
+        # Initial calculations for button sizes and background
         self.recalculate_button_sizes()
+        self.rescale_background()
 
     def recalculate_button_sizes(self):
-        """Recalculate button sizes and positions based on the screen size."""
+        """Recalculate button sizes and positions based on the current screen size."""
         screen_width, screen_height = self.screen.get_size()
-        button_width = int(screen_width * 0.3)  # 30% of screen width
+        button_width = int(screen_width * 0.3)   # 30% of screen width
         button_height = int(screen_height * 0.1)  # 10% of screen height
-        button_gap = int(screen_height * 0.05)  # 5% of screen height
+        button_gap = int(screen_height * 0.05)   # 5% of screen height
 
         for idx, (label, data) in enumerate(self.buttons.items()):
             data["rect"] = pygame.Rect(
@@ -47,6 +64,17 @@ class StartupScreen:
                 button_height,
             )
 
+    def rescale_background(self):
+        """Scale the background image to the current screen size."""
+        screen_size = self.screen.get_size()
+        self.background_image_scaled = pygame.transform.scale(self.background_image_original, screen_size)
+
+    def get_font(self, size):
+        """Retrieve or create a font of a given size from the cache."""
+        if size not in self.font_cache:
+            self.font_cache[size] = pygame.font.Font(None, size)
+        return self.font_cache[size]
+
     def run(self):
         while self.active:
             self.handle_events()
@@ -55,21 +83,23 @@ class StartupScreen:
             pygame.display.update()
 
     def render(self):
-        # Recalculate button sizes before rendering
-        self.recalculate_button_sizes()
+        """Render the startup screen."""
+        # Draw background
+        self.screen.blit(self.background_image_scaled, (0, 0))
 
-        # Draw *non-pixelated* background
-        scaled_bg = pygame.transform.scale(self.background_image, self.screen.get_size())
-        self.screen.blit(scaled_bg, (0, 0))
+        # Draw buttons
+        self.render_buttons()
 
+    def render_buttons(self):
+        """Render all buttons with hover and animation effects."""
         screen_center = (self.screen.get_width() // 2, self.screen.get_height() // 2)
 
         for idx, (label, data) in enumerate(self.buttons.items()):
             rect = data["rect"]
-            hover_scale = data["hover_scale"]
-            y_offset = data["y_offset"]
+            current_hover_scale = data["hover_scale"]
+            current_y_offset = data["y_offset"]
 
-            # Determine target properties based on selection
+            # Determine target values based on button selection
             if idx == self.selected_button_index:
                 target_hover_scale = self.hover_scale
                 target_y_offset = 0
@@ -77,14 +107,14 @@ class StartupScreen:
                 target_hover_scale = self.default_scale
                 target_y_offset = (idx - self.selected_button_index) * (rect.height + int(self.screen.get_height() * 0.05))
 
-            # Smooth transitions
-            data["hover_scale"] += (target_hover_scale - hover_scale) * self.animation_speed
-            data["y_offset"] += (target_y_offset - y_offset) * self.animation_speed
+            # Smooth animation
+            data["hover_scale"] += (target_hover_scale - current_hover_scale) * self.animation_speed
+            data["y_offset"] += (target_y_offset - current_y_offset) * self.animation_speed
 
+            # Apply scaling and position updates
             hover_scale = data["hover_scale"]
             y_offset = data["y_offset"]
 
-            # Apply scaling and position updates
             scaled_width = int(rect.width * hover_scale)
             scaled_height = int(rect.height * hover_scale)
             scaled_rect = pygame.Rect(
@@ -94,51 +124,50 @@ class StartupScreen:
                 scaled_height,
             )
 
-            # Draw the button background
-            button_base_color = (50, 50, 150)
-            pygame.draw.rect(self.screen, button_base_color, scaled_rect, border_radius=20)
+            # Draw button texture from settings
+            scaled_texture = pygame.transform.scale(data["texture"], (scaled_width, scaled_height))
+            self.screen.blit(scaled_texture, scaled_rect)
 
-            ##
-            # 1) SLIGHT UPSCALE USING SMOOTHSCALE
-            ##
-            # Render the original text (white)
-            scaled_font_size = int(40 * hover_scale)
-            text_font = pygame.font.Font(None, scaled_font_size)
+            # Render text with a slight upscale + shadow
+            scaled_font_size = int(self.base_font_size * hover_scale)
+            text_font = self.get_font(scaled_font_size)
+
+            # Create the text surface
             text_surface = text_font.render(label, True, (255, 255, 255))
-
-            # Slightly upscale (e.g., 1.2x for a small "pop" effect)
             upscale_factor = 1.2
             new_width = int(text_surface.get_width() * upscale_factor)
             new_height = int(text_surface.get_height() * upscale_factor)
+            text_surface_upscaled = pygame.transform.smoothscale(text_surface, (new_width, new_height))
 
-            text_surface_upscaled = pygame.transform.smoothscale(
-                text_surface, (new_width, new_height)
-            )
-
-            ##
-            # 2) SIMPLE SHADOW EFFECT
-            ##
-            # Create a black version of the same text for a shadow
+            # Create a shadow version
             text_shadow = text_font.render(label, True, (0, 0, 0))
-            text_shadow_upscaled = pygame.transform.smoothscale(
-                text_shadow, (new_width, new_height)
-            )
+            text_shadow_upscaled = pygame.transform.smoothscale(text_shadow, (new_width, new_height))
 
-            # Draw the shadow just a couple of pixels offset (x+2, y+2)
+            # Draw the shadow slightly offset
             shadow_offset = 2
             shadow_rect = text_shadow_upscaled.get_rect(
                 center=(scaled_rect.centerx + shadow_offset, scaled_rect.centery + shadow_offset)
             )
             self.screen.blit(text_shadow_upscaled, shadow_rect)
 
-            # Draw the upscaled white text on top of the shadow
+            # Draw the main text
             text_rect = text_surface_upscaled.get_rect(center=scaled_rect.center)
             self.screen.blit(text_surface_upscaled, text_rect)
+
     def handle_events(self):
+        """Capture and handle user events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+            # Handle window resizing
+            elif event.type == pygame.VIDEORESIZE:
+                self.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
+                self.recalculate_button_sizes()
+                self.rescale_background()
+
+            # Keyboard inputs
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
                     self.selected_button_index = (self.selected_button_index - 1) % len(self.button_list)
@@ -148,6 +177,7 @@ class StartupScreen:
                     self.handle_button_click(self.button_list[self.selected_button_index])
 
     def handle_button_click(self, label):
+        """Handle button click events."""
         if label == "Play":
             print("Play button clicked!")
             self.active = False
@@ -156,5 +186,5 @@ class StartupScreen:
             if not self.loadgames.run():
                 self.active = False
         elif label == "Settings":
-            self.settings.run()
             print("Settings button clicked!")
+            self.settings.run()

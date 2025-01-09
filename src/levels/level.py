@@ -114,7 +114,7 @@ class Level:
             for obj in objects_layer:
                 if obj.name == "player":
                     # Create the player
-                    self.player = Player((130, 130), self.all_sprites, self.collision_sprites, self.planet, self.permissions, self.notify)
+                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions, self.notify)
                     print(self.player.hitbox_rect.topleft)
                 if obj.name == "flag":
                     # Create the flag

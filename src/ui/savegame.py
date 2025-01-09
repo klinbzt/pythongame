@@ -10,7 +10,7 @@ from utils.settings import *
 # with "Save Game?" or "Don't Save" 
 #
 class ExitPopup:
-    def __init__(self, save_path='./saved_games/'):
+    def __init__(self, clock,  save_path='./saved_games/'):
         self.save_path = save_path
         self.active = True
         self.cotinuegame = False
@@ -25,7 +25,7 @@ class ExitPopup:
         self.hover_scale = 1.2
         self.default_scale = 1.0
 
-        self.clock = pygame.time.Clock()
+        self.clock = clock
         self.font = pygame.font.Font(None, 36)
 
         # Buttons: "Save Game?" + "Don't Save"
@@ -205,10 +205,11 @@ class ExitPopup:
 #   - "Continue"
 #
 class SaveGame:
-    def __init__(self, save_path='./saved_games/'):
+    def __init__(self, clock, save_path='./saved_games/'):
         pygame.init()
         self.save_path = save_path
         self.cotinuegame = False
+        self.clock = clock
 
         self.overlay_scale = 0.0
         self.overlay_target_scale = 1.0
@@ -219,7 +220,7 @@ class SaveGame:
         self.default_scale = 1.0
 
         self.active = True
-        self.clock = pygame.time.Clock()
+        self.clock = self.clock
         self.font = pygame.font.Font(None, 36)
 
         # The main overlay buttons
@@ -383,7 +384,7 @@ class SaveGame:
 
         elif label == "Exit Game":
             print("Exit Game -> open sub overlay with Save/Don't Save")
-            exit_popup = ExitPopup()
+            exit_popup = ExitPopup(self.clock)
             keep_playing = exit_popup.run(self.screen, save_info)
             # After sub popup returns:
             self.active = False

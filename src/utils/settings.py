@@ -2,7 +2,6 @@ import sys
 import pygame
 from pygame.math import Vector2 as vector
 from pygame import image
-
 # -----------------------------
 # GLOBAL GAME SETTINGS / CONSTANTS
 # -----------------------------
