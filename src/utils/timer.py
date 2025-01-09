@@ -28,3 +28,7 @@ class Timer:
 def update_timers(entity):
     for timer in entity.timers.values():
         timer.update()
+
+def reset_timers(entity):
+    for timer in entity.timers.values():
+        timer.deactivate()

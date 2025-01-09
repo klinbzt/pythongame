@@ -135,17 +135,6 @@ class Level:
         if self.player.hitbox_rect.right > self.tmx_map.width * TILE_SIZE - TILE_SIZE:
             self.player.hitbox_rect.left = self.tmx_map.width * TILE_SIZE - 2 * TILE_SIZE
 
-    # It shows wasted and ends the game
-    def die(self):
-        font = pygame.font.Font(None, 120)
-        text = font.render("WASTED", True, (255, 0, 0))
-        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-        self.screen.blit(text, text_rect)
-        pygame.display.update()
-        pygame.time.wait(1000)
-        pygame.quit()
-        exit()
-
     # Run the level
     def run(self, dt):
         self.screen.fill(BLACK)
@@ -153,9 +142,6 @@ class Level:
         self.all_sprites.draw(self.player.hitbox_rect.center)
         self.check_constraint()
         self.draw_permissions()
-
-        if self.player.alive == False:
-            self.die()
 
         if self.flag:
             self.flag.check_collision(self.player)
