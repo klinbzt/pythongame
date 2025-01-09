@@ -15,18 +15,13 @@ class Game:
         self.clock = pygame.time.Clock()
 
         # Initialize the LevelLoader
-        self.level_manager = LevelManager()
+        self.level_manager = LevelManager(self.screen, self.clock)
         self.startup_screen = StartupScreen(self.level_manager, self.clock)
         self.save_game = SaveGame(self.clock)
 
     def run(self):  
 
         self.startup_screen.run()
-
-        print("Alo>")
-        f = open(ExitStartupFile, "w")
-        f.write("Good")
-        f.close()
 
         while True:
             dt = self.clock.tick(FPS)/1000

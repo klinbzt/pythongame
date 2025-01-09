@@ -10,7 +10,6 @@ from pygame import image
 SCREEN_WIDTH = 1280
 SCREEN_HEIGHT = 720
 FPS = 60
-ExitStartupFile = "./tmp"
 
 # Tile size for grid-based levels
 TILE_SIZE = 32
