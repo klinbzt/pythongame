@@ -6,14 +6,15 @@ from sprites.groups import AllSprites
 from utils.timer import Timer
 
 class Level:
-    def __init__(self, level_data, callback):
+    def __init__(self, level_data, audio_files, callback):
         self.screen = pygame.display.get_surface()
 
         # Level data
         self.planet = level_data["planet"]
         self.tmx_map = level_data["tmx_map"]
         self.permissions = level_data["permissions"]
-
+    
+        self.audio_files = audio_files
         self.permission_images = {
             "dash": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
             "heavy_mode": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
@@ -113,10 +114,18 @@ class Level:
             for obj in objects_layer:
                 if obj.name == "player":
                     # Create the player
-                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions, self.notify)
+                    sounds = {
+                        'jump': self.audio_files['jump'],
+                        'dash': self.audio_files['dash'],
+                        'death': self.audio_files['death'],
+                        'respawn': self.audio_files['respawn']
+                    }
+                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet,
+                                         self.permissions, self.notify, sounds)
                 if obj.name == "flag":
                     # Create the flag
-                    self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback)
+                    next_level_sound = self.audio_files['next_level']
+                    self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback, next_level_sound)
         except ValueError:
             print("Layer 'Objects' not found.")
         

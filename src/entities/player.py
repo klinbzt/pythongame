@@ -2,7 +2,7 @@ from utils.settings import *
 from utils.timer import *
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_sprites, planet, permissions, notify_level_callback):
+    def __init__(self, pos, groups, collision_sprites, planet, permissions, notify_level_callback, sounds):
         super().__init__(groups)
 
         # Rendering
@@ -74,6 +74,8 @@ class Player(pygame.sprite.Sprite):
         # Permissions
         self.permissions = permissions
 
+        # Sounds
+        self.sounds = sounds
         # Timers
         self.timers = {
             "wall jump": Timer(400),
@@ -81,7 +83,7 @@ class Player(pygame.sprite.Sprite):
             "dash cooldown": Timer(1000),
             "dash duration": Timer(200),
             "afterimage duration": Timer(30),
-            "display mode": Timer(2000),
+            "display mode": Timer(2000)
         }
 
     def load_animations(self):
@@ -262,6 +264,7 @@ class Player(pygame.sprite.Sprite):
         # Cancel any ongoing jump
         self.direction.y = 0
         self.jump = False
+        self.sounds['dash'].play()
 
     # Handle any movement related action or ability the player might make
     def handle_player_movement(self, dt):
@@ -290,14 +293,17 @@ class Player(pygame.sprite.Sprite):
                 if self.on_surface["ground"]:
                     self.direction.y -= self.jump_height
                     self.timers["wall slide block"].activate()
+                    self.sounds['jump'].play()
                 elif self.permissions.get("wall_jump", False) and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
                     # Wall jump logic
                     self.timers["wall jump"].activate()
                     self.direction.y -= self.wall_jump_height_factor * self.jump_height
                     if self.on_surface["left"]:
                         self.direction.x = 1
+                        self.sounds['jump'].play()
                     else:
                         self.direction.x = -1
+                        self.sounds['jump'].play()
                 self.jump = False
 
             self.handle_platform_movement(dt)
@@ -414,11 +420,11 @@ class Player(pygame.sprite.Sprite):
         update_timers(self)
 
         if self.hitbox_rect.bottom > SCREEN_HEIGHT + 2 * TILE_SIZE:
-            self.respawn_player()
-            return
+                self.respawn_player()
 
         if self.current_animation == "death":
             if self.current_frame == len(self.animations[self.current_animation]) - 1:
+                self.sounds['death'].play()
                 self.respawn_player()
                 return
         else:
