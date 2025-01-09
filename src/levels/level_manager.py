@@ -4,7 +4,7 @@ from pytmx.util_pygame import load_pygame  # type: ignore
 from utils.settings import *
 from planets.planet import Planet
 from levels.level import Level
-#from ui.textbox import *
+from ui.textbox import *
 
 class LevelManager:
     def __init__(self, screen, clock):
@@ -153,3 +153,18 @@ class LevelManager:
 
         if self.current_level:
             self.current_level.run(dt)
+
+        if not self.text_shown:
+            self.text_shown = True
+            font = pygame.font.Font(None, 36)
+
+            # Calculate box dimensions relative to the screen size
+            box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
+            box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
+
+            # Center the box on the screen
+            box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
+
+            # Create and display the text box
+            text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  Welcome to the tutorial!     Press [Enter] to skip", font=font, fade_time=10)
+            text.run()
