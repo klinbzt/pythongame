@@ -1,7 +1,4 @@
-import json
-import pygame
-import sys
-import os
+import os, json
 from os.path import join
 from utils.settings import *
 
@@ -196,7 +193,6 @@ class ExitPopup:
             print("Game not saved.")
             self.active = False
             self.cotinuegame = False
-
 
 #
 # Main Overlay Class: 

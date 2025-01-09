@@ -1,17 +1,13 @@
-import pygame
-import sys
-import os
-import json
+import os, json
 from utils.settings import *
 
-
 class LoadGame:
-    def __init__(self, screen, level_manager):
+    def __init__(self, screen):
         self.screen = screen
-        self.level_manager = level_manager
         self.active = True
         self.back = False
         self.getoldsave = False
+        self.loaded_save_data = None
 
         self.saved_games_dir = "saved_games"
 
@@ -57,7 +53,7 @@ class LoadGame:
 
     def run(self):
         """Main loop of the load game screen."""
-        self.__init__(self.screen, self.level_manager)
+        self.__init__(self.screen)
 
         while self.active:
             self.handle_events()
@@ -67,7 +63,8 @@ class LoadGame:
 
         # Free up resources once the loop ends
         self.release_resources()
-        return self.back
+
+        return self.loaded_save_data
 
     def render(self):
         """Render buttons with animations."""
@@ -78,7 +75,7 @@ class LoadGame:
             no_games_text = self.font.render("No saved games available.", True, WHITE)
             text_rect = no_games_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
             self.screen.blit(no_games_text, text_rect)
-            return
+            return None
 
         # Calculate layout properties
         screen_center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
@@ -185,16 +182,16 @@ class LoadGame:
                             self.delete_game(button["label"])
 
     def load_game(self, save_file):
-        """Load a selected game."""
+        """Load a selected game and return its data."""
         save_path = os.path.join(self.saved_games_dir, save_file)
         try:
             with open(save_path, "r") as file:
-                save_data = json.load(file)
-            self.level_manager.load_save_info(save_data)
-            self.active = False
+                self.loaded_save_data = json.load(file)
             self.getoldsave = True
+            self.active = False
         except Exception as e:
             print(f"Error loading game {save_file}: {e}")
+            return None
 
     def delete_game(self, save_file):
         """Delete the selected save file."""
@@ -205,3 +202,4 @@ class LoadGame:
             self.load_saved_games()  # Refresh the button list
         except Exception as e:
             print(f"Error deleting game {save_file}: {e}")
+            return None

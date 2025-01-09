@@ -1,11 +1,9 @@
-import pygame
-import sys
 from utils.settings import *
 from ui.loadgame import *
 from ui.menusettings import SettingsMenu
 
 class StartupScreen:
-    def __init__(self, level_manager):
+    def __init__(self):
         pygame.init()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.active = True
@@ -15,7 +13,7 @@ class StartupScreen:
         self.background_image = pygame.image.load("../assets/graphics/intro/startupbrackground.png").convert()
         self.font = pygame.font.Font(None, 40)
 
-        self.loadgames = LoadGame(self.screen, level_manager)
+        self.loadgames = LoadGame(self.screen)
         self.settings = SettingsMenu(self.screen)
         self.animation_speed = 0.2
         self.hover_scale = 1.2
@@ -31,6 +29,9 @@ class StartupScreen:
         self.selected_button_index = 0
         self.button_list = list(self.buttons.keys())
         self.recalculate_button_sizes()
+
+        # Data that could be returned from loadgame.run() when wanting to load a new game
+        self.loaded_save_data = None
 
     def recalculate_button_sizes(self):
         """Recalculate button sizes and positions based on the screen size."""
@@ -53,6 +54,8 @@ class StartupScreen:
             self.render()
             self.clock.tick(FPS)
             pygame.display.update()
+        
+        return self.loaded_save_data
 
     def render(self):
         # Recalculate button sizes before rendering
@@ -134,6 +137,7 @@ class StartupScreen:
             # Draw the upscaled white text on top of the shadow
             text_rect = text_surface_upscaled.get_rect(center=scaled_rect.center)
             self.screen.blit(text_surface_upscaled, text_rect)
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -153,7 +157,8 @@ class StartupScreen:
             self.active = False
         elif label == "Load Game":
             print("Load Game button clicked!")
-            if not self.loadgames.run():
+            self.loaded_save_data = self.loadgames.run()
+            if self.loaded_save_data:
                 self.active = False
         elif label == "Settings":
             self.settings.run()

@@ -4,6 +4,7 @@ from entities.player import Player
 from levels.flag import Flag
 from sprites.groups import AllSprites
 from utils.timer import Timer
+
 class Level:
     def __init__(self, level_data, callback):
         self.screen = pygame.display.get_surface()
@@ -51,8 +52,6 @@ class Level:
         else:
             self.permission_timers[mode].deactivate()
 
-    # PROBLEM (Antonio) When you have no permission for the action you should not display the photo, but it does
-    # Solved - check the actual permissions (self.permissions). Renamed the modes and used an if to check
     def draw_permissions(self):
         x_offset = 10
         for mode, image in self.permission_images.items():
@@ -114,8 +113,7 @@ class Level:
             for obj in objects_layer:
                 if obj.name == "player":
                     # Create the player
-                    self.player = Player((130, 130), self.all_sprites, self.collision_sprites, self.planet, self.permissions, self.notify)
-                    print(self.player.hitbox_rect.topleft)
+                    self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet, self.permissions, self.notify)
                 if obj.name == "flag":
                     # Create the flag
                     self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback)
@@ -129,6 +127,7 @@ class Level:
                 Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, self.all_sprites, z)
         except ValueError:
             print("Layer 'Decorations' not found.")
+
     # Constraining the player to the map size
     def check_constraint(self):
         if self.player.hitbox_rect.left <= 0:
@@ -138,22 +137,25 @@ class Level:
 
     # It shows wasted and ends the game
     def die(self):
-            font = pygame.font.Font(None, 120)
-            text = font.render("WASTED", True, (255, 0, 0))
-            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
-            self.screen.blit(text, text_rect)
-            pygame.display.update()
-            pygame.time.wait(1000)
-            pygame.quit()
-            exit() 
+        font = pygame.font.Font(None, 120)
+        text = font.render("WASTED", True, (255, 0, 0))
+        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        self.screen.blit(text, text_rect)
+        pygame.display.update()
+        pygame.time.wait(1000)
+        pygame.quit()
+        exit()
 
+    # Run the level
     def run(self, dt):
         self.screen.fill(BLACK)
         self.all_sprites.update(dt)
         self.all_sprites.draw(self.player.hitbox_rect.center)
-        if self.player.alive == False:
-            self.die()
-        if self.flag:
-            self.flag.check_collision(self.player)
         self.check_constraint()
         self.draw_permissions()
+
+        if self.player.alive == False:
+            self.die()
+
+        if self.flag:
+            self.flag.check_collision(self.player)

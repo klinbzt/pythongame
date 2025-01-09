@@ -1,6 +1,3 @@
-import sys
-import pygame
-from pygame.math import Vector2 as vector
 from utils.settings import *
 class SettingsMenu:
     def __init__(self, screen):

@@ -1,5 +1,6 @@
 from utils.settings import *
 from sprites.sprite import Sprite
+
 class AllSprites(pygame.sprite.Group):
     def __init__(self, tmx_map):
         super().__init__()

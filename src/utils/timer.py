@@ -1,4 +1,4 @@
-from pygame.time import get_ticks # type: ignore
+from pygame.time import get_ticks
 
 class Timer:
     def __init__(self, duration, func = None, repeat = False):
