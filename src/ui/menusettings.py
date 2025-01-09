@@ -29,11 +29,12 @@ class SettingsMenu:
 
         texture_image = pygame.image.load("../assets/graphics/tilesets/extra.png").convert_alpha()
 
+        self.background_image_original = pygame.image.load("../assets/graphics/tilesets/new_background.png").convert()
         texture_coords = (0, 256, 128, 128)
 
         self.button_texture_gray = texture_image.subsurface(pygame.Rect(*texture_coords))
         # Preload resources
-        self.background_image_original = pygame.image.load("../assets/graphics/intro/startupbrackground.png").convert()
+        self.background_image_original = pygame.image.load("../assets/graphics/tilesets/new_background.png").convert()
 
         # Button properties
         self.hover_scale = HOVER_SCALE
@@ -116,7 +117,7 @@ class SettingsMenu:
 
     def render(self):
         """Render the settings menu."""
-        self.screen.fill(BLACK)
+        self.screen.blit(self.background_image_original, (0, 0))
         mouse_pos = pygame.mouse.get_pos()
 
         # Draw sliders if active

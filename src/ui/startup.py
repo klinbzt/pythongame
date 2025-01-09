@@ -17,7 +17,7 @@ class StartupScreen:
 
         self.button_texture_gray = texture_image.subsurface(pygame.Rect(*texture_coords))
         # Preload resources
-        self.background_image_original = pygame.image.load("../assets/graphics/intro/startupbrackground.png").convert()
+        self.background_image_original = pygame.image.load("../assets/graphics/tilesets/new_background.png").convert()
 
         # Scaled background placeholder
         self.background_image_scaled = None

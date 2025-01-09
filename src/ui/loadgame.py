@@ -14,12 +14,14 @@ class LoadGame:
         self.back = False
         self.getoldsave = False
 
+        self.background_image_original = pygame.image.load("../assets/graphics/tilesets/new_background.png").convert()
+
         self.saved_games_dir = "saved_games"
 
         texture_image = pygame.image.load("../assets/graphics/tilesets/extra.png").convert_alpha()
-
+        
         texture_coords_gray = (0, 256, 128, 128)
-        texture_coords_bronze = (310, 256, 128, 128)
+        texture_coords_bronze = (320, 256, 128, 128)
         texture_coords_delete_bronze = (515, 190, 64, 64)
 
         self.button_texture_gray = texture_image.subsurface(pygame.Rect(*texture_coords_gray))
@@ -69,7 +71,7 @@ class LoadGame:
         self.saved_game_buttons = [{"label": file, "hover_scale": self.default_scale, "y_offset": 0} for file in saved_files]
 
     def render(self):
-        self.screen.fill(BLACK)
+        self.screen.blit(self.background_image_original, (0, 0))
 
         if not self.saved_game_buttons:
             no_games_text = self.font.render("No saved games available.", True, WHITE)

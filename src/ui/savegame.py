@@ -266,7 +266,7 @@ class SaveGame:
         # Button sizes and spacing
         button_width = int(self.overlay_width * 0.5)
         button_height = int(self.overlay_height * 0.2)
-        button_gap = 25
+        button_gap = 20
 
         # Smaller dimensions for the "Exit Game" button
         exit_button_width = int(self.overlay_width * 0.35)
@@ -287,6 +287,8 @@ class SaveGame:
                 button_width = exit_button_width
                 button_height = exit_button_height
                 left = cx - button_width // 2
+                top -= 5
+                
 
             rect = pygame.Rect(left, top, button_width, button_height)
             self.buttons[label]["rect"] = rect
