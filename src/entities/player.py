@@ -20,6 +20,7 @@ class Player(pygame.sprite.Sprite):
 
         # Player State
         self.alive = True
+        self.spawn_pos = pos
         self.image = self.animations[self.current_animation][self.current_frame]
         self.rect = self.image.get_rect(topleft=pos)
         self.facing_right = True
@@ -53,6 +54,10 @@ class Player(pygame.sprite.Sprite):
         self.dash_speed = 600
         self.dashing = False
 
+        # Afterimage settings
+        self.afterimages = []
+        self.afterimage_lifetime = 200
+
         # Mass manipulation - heavy
         self.heavy_mode = False
         self.a_key_pressed = False
@@ -75,7 +80,8 @@ class Player(pygame.sprite.Sprite):
             "wall slide block": Timer(250),
             "dash cooldown": Timer(1000),
             "dash duration": Timer(200),
-            "display mode": Timer(2000)
+            "afterimage duration": Timer(30),
+            "display mode": Timer(2000),
         }
 
     def load_animations(self):
@@ -102,6 +108,13 @@ class Player(pygame.sprite.Sprite):
 
         return animations
     
+    def draw_afterimages(self, surface, offset):
+        """Draw the player's afterimages."""
+        if self.dashing:
+            for afterimage in self.afterimages:
+                offset_pos = vector(afterimage['pos']) + offset
+                surface.blit(afterimage['image'], offset_pos)
+    
     def handle_animation(self, dt):
         # Update the previous animation state
         self.previous_animation = self.current_animation
@@ -110,6 +123,36 @@ class Player(pygame.sprite.Sprite):
         if not self.alive:
             self.current_animation = 'death'
         else:
+            if self.dashing:
+                # Add an afterimage at regular intervals while dashing
+                if self.timers["afterimage duration"].active:
+                    self.timers["afterimage duration"].update()
+                else:
+                    self.afterimages.append({
+                        'image': self.image.copy(),
+                        'pos': self.rect.topleft,
+                        'alpha': 255,
+                        'timer': self.afterimage_lifetime
+                    })
+                    self.timers["afterimage duration"].activate()
+
+                # Update afterimages and apply fading (alpha decrease)
+                for afterimage in self.afterimages[:]:
+                    afterimage['timer'] -= dt * 1000
+                    if afterimage['timer'] <= 0:
+                        self.afterimages.remove(afterimage)
+                    else:
+                        afterimage['alpha'] -= 25
+                        if afterimage['alpha'] < 0:
+                            afterimage['alpha'] = 0
+                        afterimage['image'].set_alpha(afterimage['alpha'])
+
+            # Once the dash is over, clear everything related to the dash
+            if not self.timers["dash duration"].active:
+                self.timers["afterimage duration"].deactivate()
+                self.afterimages.clear()
+                self.last_direction = vector(1, 0)
+
             if self.on_surface["ground"]:
                 if self.direction.x == 0:
                     self.current_animation = "idle"
@@ -117,7 +160,7 @@ class Player(pygame.sprite.Sprite):
                     self.current_animation = "run"
             else:
                 if any((self.on_surface["left"], self.on_surface["right"])):
-                    self.current_animation = "idle"
+                    self.current_animation = "fall"
                 else:
                     if self.direction.y < 0:
                         self.current_animation = "jump"
@@ -174,6 +217,7 @@ class Player(pygame.sprite.Sprite):
             self.start_dash()
         else:
             self.notify_level("dash", active=False)
+
         # Trigger heavy mode if permissions allow it
         # Only toggle when the key is first pressed. Reset when the key is released
         if self.permissions.get("heavy_mode", False) and keys[pygame.K_a]:
@@ -327,14 +371,60 @@ class Player(pygame.sprite.Sprite):
                 if getattr(sprite, 'damage', True):
                     self.alive = False
 
+    def respawn_player(self):
+        # Reset player position
+        self.hitbox_rect.topleft = self.spawn_pos
+        self.rect.center = self.hitbox_rect.center
+        self.facing_right = True
+
+        # Reset animation
+        self.current_animation = 'idle'
+        self.current_frame = 0
+        self.animation_timer = 0
+
+        # Reset movement
+        self.direction = vector(0, 0)
+        self.jump = False
+        self.dashing = False
+
+        # Set alive state
+        self.alive = True
+
+        # Reset environment and physics
+        self.on_surface = {"ground": False, "left": False, "right": False}
+        self.platform = None
+        self.mass = 100
+
+        # Reset abilities
+        self.heavy_mode = False
+        self.a_key_pressed = False
+        self.light_mode = False
+        self.s_key_pressed = False
+
+        # Reset abilities display
+        self.notify_level("dash", active=False)
+        self.notify_level("heavy_mode", active=False)
+        self.notify_level("light_mode", active=False)
+
+        # Reset timers
+        reset_timers(self)
+
     # Update state
     def update(self, dt):
         update_timers(self)
+
         if self.hitbox_rect.bottom > SCREEN_HEIGHT + 2 * TILE_SIZE:
-            self.alive = False
-        if self.alive:
+            self.respawn_player()
+            return
+
+        if self.current_animation == "death":
+            if self.current_frame == len(self.animations[self.current_animation]) - 1:
+                self.respawn_player()
+                return
+        else:
             self.prev_rect = self.hitbox_rect.copy()
             self.handle_input()
             self.handle_player_movement(dt)
             self.check_contact()
-            self.handle_animation(dt)
+
+        self.handle_animation(dt)

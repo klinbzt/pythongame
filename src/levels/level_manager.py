@@ -6,21 +6,19 @@ from planets.planet import Planet
 from levels.level import Level
 
 class LevelManager:
-    def __init__(self):
-        print("reseted?")
+    def __init__(self, loaded_save_data):
         # General
         self.number_of_planets = 4
         self.root_path = None
 
         # Current Planet
-        self.current_planet_index = 0
+        self.current_planet_index = loaded_save_data["current_planet_index"]
         self.current_planet = self.load_planet()
 
         # Current Level
-        self.current_level_index = 0
+        self.current_level_index = loaded_save_data["current_level_index"]
         self.current_level = self.load_level()
-        
-        self.loadedsave = False
+
     def update_root_path(self):
         self.root_path = join("..", "levels", f"planet_{self.current_planet_index}")
 
@@ -42,24 +40,14 @@ class LevelManager:
 
     # Load level data and return a Level Instance
     def load_level(self):
-        """
-        Loads the current level and updates its parameters to match the saved or current game state.
-        """
-        print(f"Log: {self.current_level_index}")
-        level_config = self.current_planet.levels[self.current_level_index]
-        tmx_path = join(self.root_path, level_config["tmx_map"])
+        config_path = join(self.root_path, self.current_planet.levels[self.current_level_index]["tmx_map"])
 
         level_data = {
             "planet": self.current_planet,
-            "tmx_map": load_pygame(tmx_path),
-            "permissions": level_config["permissions"],
+            "tmx_map": load_pygame(config_path),
+            "permissions": self.current_planet.levels[self.current_level_index]["permissions"],
         }
 
-        # Update the current planet reference for consistency
-        self.current_planet = level_data["planet"]
-        
-        print(f"Loaded level with {self.current_level_index}")
-        # Return a new Level instance with the updated data
         return Level(level_data, self.callback)
 
     # Cleanup sprites of the previous level
@@ -98,6 +86,7 @@ class LevelManager:
         # Load the next level
         self.current_level = self.load_level()
 
+    # Return the info of the current level
     def get_save_info(self):
         """
         Collect necessary information for saving the game.
@@ -110,24 +99,6 @@ class LevelManager:
             "planet_name": self.current_planet.name,
         }
         return save_info
-
-    def load_save_info(self, save_info):
-        """
-        Update the planet and level information from the saved game data and return the loaded level.
-        """
-        if "current_planet_index" in save_info and "current_level_index" in save_info:
-            # Update indices from save data
-            self.current_planet_index = save_info["current_planet_index"]
-            self.current_level_index = save_info["current_level_index"]
-            # Debugging print statements
-            print(f"Loaded save data: Planet Index = {self.current_planet_index}, Level Index = {self.current_level_index}")
-
-            # Reload planet and level based on saved data
-            self.current_planet = self.load_planet()  # Load planet based on saved index
-            self.current_level = self.load_level()    # Load level based on saved index
-        else:
-            print("Invalid save data: 'current_planet_index' or 'current_level_index' missing.")
-        return self.current_level  # Return the current level
 
     def run(self, dt):
         """

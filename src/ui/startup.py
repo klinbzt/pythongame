@@ -81,6 +81,8 @@ class StartupScreen:
             self.render()
             self.clock.tick(FPS)
             pygame.display.update()
+        
+        return self.loaded_save_data
 
     def render(self):
         """Render the startup screen."""
@@ -154,6 +156,7 @@ class StartupScreen:
             text_rect = text_surface_upscaled.get_rect(center=scaled_rect.center)
             self.screen.blit(text_surface_upscaled, text_rect)
 
+
     def handle_events(self):
         """Capture and handle user events."""
         for event in pygame.event.get():
@@ -183,7 +186,8 @@ class StartupScreen:
             self.active = False
         elif label == "Load Game":
             print("Load Game button clicked!")
-            if not self.loadgames.run():
+            self.loaded_save_data = self.loadgames.run()
+            if self.loaded_save_data:
                 self.active = False
         elif label == "Settings":
             print("Settings button clicked!")

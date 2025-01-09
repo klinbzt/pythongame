@@ -1,4 +1,4 @@
-from pygame.time import get_ticks # type: ignore
+from pygame.time import get_ticks
 
 class Timer:
     def __init__(self, duration, func = None, repeat = False):
@@ -28,3 +28,7 @@ class Timer:
 def update_timers(entity):
     for timer in entity.timers.values():
         timer.update()
+
+def reset_timers(entity):
+    for timer in entity.timers.values():
+        timer.deactivate()

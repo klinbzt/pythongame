@@ -1,7 +1,4 @@
-import json
-import pygame
-import sys
-import os
+import os, json
 from os.path import join
 from utils.settings import *
 
