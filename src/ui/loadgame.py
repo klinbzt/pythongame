@@ -1,11 +1,15 @@
-import os, json
+import pygame
+import sys
+import os
+import json
 from utils.settings import *
 from ui.animatedtext import TextDisplay
 
 
 class LoadGame:
-    def __init__(self, screen):
+    def __init__(self, screen, level_manager):
         self.screen = screen
+        self.level_manager = level_manager
         self.active = True
         self.back = False
         self.getoldsave = False
@@ -73,7 +77,7 @@ class LoadGame:
             no_games_text = self.font.render("No saved games available.", True, WHITE)
             text_rect = no_games_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
             self.screen.blit(no_games_text, text_rect)
-            return None
+            return
 
         screen_center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
         button_gap = int(SCREEN_HEIGHT * 0.05)
@@ -186,12 +190,12 @@ class LoadGame:
         save_path = os.path.join(self.saved_games_dir, save_file)
         try:
             with open(save_path, "r") as file:
-                self.loaded_save_data = json.load(file)
-            self.getoldsave = True
+                save_data = json.load(file)
+            self.level_manager.load_save_info(save_data)
             self.active = False
+            self.getoldsave = True
         except Exception as e:
             print(f"Error loading game {save_file}: {e}")
-            return None
 
     def delete_game(self, save_file):
         save_path = os.path.join(self.saved_games_dir, save_file)
