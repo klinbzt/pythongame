@@ -12,10 +12,6 @@ class Planet:
         entity.direction.y += entity.mass * self.gravity_strength / 2 * dt
         entity.hitbox_rect.y += entity.direction.y * dt
         entity.direction.y += entity.mass * self.gravity_strength / 2 * dt
-        """Apply gravity to the entity's vertical velocity."""
-        entity.direction.y += entity.mass * self.gravity_strength / 2 * dt
-        entity.hitbox_rect.y += entity.direction.y * dt
-        entity.direction.y += entity.mass * self.gravity_strength / 2 * dt
 
     def apply_gravity_on_wall_slide(self, entity, dt):
         """Apply gravity to the entity's vertical velocity when wall sliding."""
