@@ -2,11 +2,19 @@ from utils.settings import *
 from utils.timer import *
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_sprites, planet, permissions, notify_level_callback, sounds):
+    def __init__(self, pos, groups, collision_sprites, planet, permissions, notify_level_callback, audio_manager):
         super().__init__(groups)
 
         # Rendering
         self.z = Z_LAYERS['main']
+
+        # Audio manager
+        self.audio_manager = audio_manager
+
+        # Set sound volumes individually, if necessary
+        self.audio_manager.set_sound_volume("jump", 0.3)
+        self.audio_manager.set_sound_volume("dash", 0.3)
+        self.audio_manager.set_sound_volume("death", 0.3)
 
         # Player Animations
         self.sprite_sheet = pygame.image.load("../assets/graphics/tilesets/animated_player.png").convert_alpha()
@@ -50,7 +58,6 @@ class Player(pygame.sprite.Sprite):
         self.wall_jump_height_factor = 1.5
 
         # Dash
-        self.last_direction = vector(1, 0)
         self.dash_speed = 600
         self.dashing = False
 
@@ -74,8 +81,6 @@ class Player(pygame.sprite.Sprite):
         # Permissions
         self.permissions = permissions
 
-        # Sounds
-        self.sounds = sounds
         # Timers
         self.timers = {
             "wall jump": Timer(400),
@@ -149,25 +154,24 @@ class Player(pygame.sprite.Sprite):
                             afterimage['alpha'] = 0
                         afterimage['image'].set_alpha(afterimage['alpha'])
 
-            # Once the dash is over, clear everything related to the dash
-            if not self.timers["dash duration"].active:
+            else:
+                # Once the dash is over, clear everything related to the dash
                 self.timers["afterimage duration"].deactivate()
                 self.afterimages.clear()
-                self.last_direction = vector(1, 0)
 
-            if self.on_surface["ground"]:
-                if self.direction.x == 0:
-                    self.current_animation = "idle"
-                else:
-                    self.current_animation = "run"
-            else:
-                if any((self.on_surface["left"], self.on_surface["right"])):
-                    self.current_animation = "fall"
-                else:
-                    if self.direction.y < 0:
-                        self.current_animation = "jump"
+                if self.on_surface["ground"]:
+                    if self.direction.x == 0:
+                        self.current_animation = "idle"
                     else:
+                        self.current_animation = "run"
+                else:
+                    if any((self.on_surface["left"], self.on_surface["right"])):
                         self.current_animation = "fall"
+                    else:
+                        if self.direction.y < 0:
+                            self.current_animation = "jump"
+                        else:
+                            self.current_animation = "fall"
         
         # If the animation has changed, reset the frame to 0
         if self.current_animation != self.previous_animation:
@@ -206,13 +210,13 @@ class Player(pygame.sprite.Sprite):
                 self.facing_right = False
             if input_vector:
                 self.direction.x = input_vector.normalize().x
-                self.last_direction = vector(self.direction.x, 0)  # Update last direction
             else:
                 self.direction.x = 0
 
         # Check jump permission
-        if self.permissions.get("jump", False) and keys[pygame.K_SPACE]:
-            self.jump = True
+        if self.permissions.get("jump", False) and keys[pygame.K_UP]:
+            if any((self.on_surface["ground"], self.on_surface["left"], self.on_surface["right"])):
+                self.jump = True
 
         # Trigger dash if permission allow it
         if self.permissions.get("dash", False) and keys[pygame.K_d] and not self.dashing and not self.timers["dash cooldown"].active:
@@ -264,13 +268,21 @@ class Player(pygame.sprite.Sprite):
         # Cancel any ongoing jump
         self.direction.y = 0
         self.jump = False
-        self.sounds['dash'].play()
+
+        # Play the dash sound effect
+        self.audio_manager.play("dash")
+
+        # Set dash movement direction based on player's facing
+        self.direction.x = 1 if self.facing_right else -1
 
     # Handle any movement related action or ability the player might make
     def handle_player_movement(self, dt):
         if self.dashing:
+            # Dash direction is based on facing direction
+            self.direction.x = 1 if self.facing_right else -1
+
             # Dash movement in the last known direction
-            self.hitbox_rect.x += self.last_direction.x * self.dash_speed * dt
+            self.hitbox_rect.x += self.direction.x * self.dash_speed * dt
             self.collision("x")
             self.rect.center = self.hitbox_rect.center
 
@@ -282,28 +294,30 @@ class Player(pygame.sprite.Sprite):
             self.hitbox_rect.x += self.direction.x * self.speed * dt
             self.collision("x")
             self.rect.center = self.hitbox_rect.center
+
             # Apply gravity or wall slide physics if conditions are met
-            if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])) and self.permissions.get("wall_slide", False) and not self.timers["wall slide block"].active:
+            if not self.on_surface["ground"] and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
                 self.planet.apply_gravity_on_wall_slide(self, dt)
             else:
                 self.planet.apply_gravity(self, dt)
 
-            # Jump logic
             if self.jump:
+                # Play jump sound effect
+                self.audio_manager.play("jump")
+
                 if self.on_surface["ground"]:
+                    # Normal jump
                     self.direction.y -= self.jump_height
                     self.timers["wall slide block"].activate()
-                    self.sounds['jump'].play()
-                elif self.permissions.get("wall_jump", False) and any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
-                    # Wall jump logic
+                elif any((self.on_surface["left"], self.on_surface["right"])) and not self.timers["wall slide block"].active:
+                    # Wall jump
                     self.timers["wall jump"].activate()
                     self.direction.y -= self.wall_jump_height_factor * self.jump_height
                     if self.on_surface["left"]:
                         self.direction.x = 1
-                        self.sounds['jump'].play()
                     else:
                         self.direction.x = -1
-                        self.sounds['jump'].play()
+
                 self.jump = False
 
             self.handle_platform_movement(dt)
@@ -375,8 +389,13 @@ class Player(pygame.sprite.Sprite):
 
                 # If it touches a damage object, it dies
                 if getattr(sprite, 'damage', True):
+                    # Play death sound effect
+                    self.audio_manager.play("death")
+
+                    # Set flag to False
                     self.alive = False
 
+    # If the player takes damage or falls off the map, respawn him at the original coordinates
     def respawn_player(self):
         # Reset player position
         self.hitbox_rect.topleft = self.spawn_pos
@@ -424,7 +443,6 @@ class Player(pygame.sprite.Sprite):
 
         if self.current_animation == "death":
             if self.current_frame == len(self.animations[self.current_animation]) - 1:
-                self.sounds['death'].play()
                 self.respawn_player()
                 return
         else:

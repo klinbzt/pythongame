@@ -6,15 +6,21 @@ from sprites.groups import AllSprites
 from utils.timer import Timer
 
 class Level:
-    def __init__(self, level_data, audio_files, callback):
+    def __init__(self, level_data, callback):
         self.screen = pygame.display.get_surface()
 
-        # Level data
+        # Level data ( Passed on by the Level Manager )
         self.planet = level_data["planet"]
         self.tmx_map = level_data["tmx_map"]
         self.permissions = level_data["permissions"]
-    
-        self.audio_files = audio_files
+
+        # Level sound ( Each planet has an audio_manager instance, so if we want, we can use a different set of sounds )
+        self.audio_manager = level_data["planet"].audio_manager
+
+        # Level sound flags
+        self.bg_music_playing = False
+
+        # Level allowed abilities images
         self.permission_images = {
             "dash": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
             "heavy_mode": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
@@ -40,19 +46,21 @@ class Level:
         self.all_sprites = AllSprites(self.tmx_map)
         self.collision_sprites = pygame.sprite.Group()
 
-        # Initialize level general
+        # Initialize level flags
         self.player = None
         self.flag = None
 
         # Setup the level
         self.setup()
 
+    # Passed to player to notify when one of the allowed abilities has been used
     def notify(self, mode, active):
         if active:
             self.permission_timers[mode].activate()
         else:
             self.permission_timers[mode].deactivate()
 
+    # Draw the boxes of the abilities that are allowed in this level
     def draw_permissions(self):
         x_offset = 10
         for mode, image in self.permission_images.items():
@@ -66,8 +74,9 @@ class Level:
                 self.screen.blit(active_image, (x_offset, 10))
                 x_offset += active_image.get_width() + 10
 
-    # PROBLEM: On planets with high gravity, the player is rendered, but the platforms / terrain isn't all setup, so the player falls through them and off the map. Needs fixing ASAP
+    # Setup the level by creating the sprites of the objects in each layer and initializing flags
     def setup(self):
+        # Terrain Layer
         try:
             terrain_layer = self.tmx_map.get_layer_by_name("Terrain")
             z = Z_LAYERS["main"]
@@ -76,7 +85,7 @@ class Level:
         except ValueError:
             print("Layer 'Terrain' not found.")
         
-        # Damage Tiles
+        # Damage Tiles Layer
         try:
             damage_terrain_layer = self.tmx_map.get_layer_by_name("Damage_Terrain")
             z = Z_LAYERS["main"]
@@ -86,7 +95,7 @@ class Level:
         except ValueError:
             print("Layer 'Damage_Terrain' not found.")
 
-        # Moving Objects
+        # Moving Objects Layer
         try:
             moving_objects_layer = self.tmx_map.get_layer_by_name("Moving Objects")
             for obj in moving_objects_layer:
@@ -108,27 +117,21 @@ class Level:
         except ValueError:
             print("Layer 'Moving Objects' not found.")
         
-        # Objects
+        # Objects Layer
         try:
             objects_layer = self.tmx_map.get_layer_by_name("Objects")
             for obj in objects_layer:
                 if obj.name == "player":
                     # Create the player
-                    sounds = {
-                        'jump': self.audio_files['jump'],
-                        'dash': self.audio_files['dash'],
-                        'death': self.audio_files['death'],
-                        'respawn': self.audio_files['respawn']
-                    }
                     self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.planet,
-                                         self.permissions, self.notify, sounds)
+                                         self.permissions, self.notify, self.audio_manager)
                 if obj.name == "flag":
                     # Create the flag
-                    next_level_sound = self.audio_files['next_level']
-                    self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites, self.callback, next_level_sound)
+                    self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites)
         except ValueError:
             print("Layer 'Objects' not found.")
         
+        # Decorations Layer
         try:
             decorations_layer = self.tmx_map.get_layer_by_name("Decorations")
             z = Z_LAYERS["fg"]
@@ -152,5 +155,15 @@ class Level:
         self.check_constraint()
         self.draw_permissions()
 
-        if self.flag:
-            self.flag.check_collision(self.player)
+        # Play background music if not already playing
+        if not self.bg_music_playing:
+            self.audio_manager.set_sound_volume("bg_music", 0.1)
+            self.audio_manager.play('bg_music', loop=-1)
+            self.bg_music_playing = True
+
+        # Check if the level has been completed. If it was, play audio and go to the next level
+        if self.flag.check_collision(self.player):
+            self.audio_manager.stop("bg_music")
+            self.audio_manager.set_sound_volume("next_level", 0.5)
+            self.audio_manager.play("next_level")
+            self.callback()

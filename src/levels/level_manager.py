@@ -14,14 +14,6 @@ class LevelManager:
         self.screen = screen
         self.clock = clock
         self.text_shown = False
-        self.audio_files = {
-            'jump': pygame.mixer.Sound(join ('..', 'assets', 'sounds', 'player-jump.ogg')),
-            'next_level': pygame.mixer.Sound(join ('..', 'assets', 'sounds', 'portal-jump.wav')),
-            'dash': pygame.mixer.Sound(join ('..', 'assets', 'sounds', 'dash.wav')),
-            'death': pygame.mixer.Sound(join ('..', 'assets', 'sounds', 'death.ogg')),
-            'respawn': pygame.mixer.Sound(join ('..', 'assets', 'sounds', 'respawn.ogg')),
-            'bg_music': pygame.mixer.Sound(join ('..', 'assets', 'sounds', 'bg_music.mp3'))
-        }
 
         # Current Planet
         self.current_planet_index = 0
@@ -30,8 +22,8 @@ class LevelManager:
         # Current Level
         self.current_level_index = 0
         self.current_level = self.load_level()
-        
-        self.loadedsave = False
+
+    # Update the path which contains data for the current planet
     def update_root_path(self):
         self.root_path = join("..", "levels", f"planet_{self.current_planet_index}")
 
@@ -70,12 +62,9 @@ class LevelManager:
         self.current_planet = level_data["planet"]
         
         print(f"Loaded level with {self.current_level_index}")
+
         # Return a new Level instance with the updated data
-        
-        # Start to play the bg_music, should start in the same time with the level ISSUE
-        self.audio_files["bg_music"].set_volume(0.1)
-        self.audio_files["bg_music"].play(-1)
-        return Level(level_data, self.audio_files, self.callback)
+        return Level(level_data, self.callback)
 
     # Cleanup sprites of the previous level
     def cleanup_level(self):

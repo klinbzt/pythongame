@@ -1,10 +1,12 @@
 from utils.settings import *
+from audio.audio_manager import AudioManager
 
 class Planet:
     def __init__(self, name, gravity_strength, levels):
         self.name = name
         self.gravity_strength = gravity_strength
         self.levels = levels
+        self.audio_manager = AudioManager()
 
     # Gravity now works based on both gravity_strength ( planet ) and mass ( entity )
     def apply_gravity(self, entity, dt):

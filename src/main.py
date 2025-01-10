@@ -14,8 +14,10 @@ class Game:
         # Initialize the Clock
         self.clock = pygame.time.Clock()
 
-        # Initialize the LevelLoader
+        # Initialize the LevelManager
         self.level_manager = LevelManager(self.screen, self.clock)
+
+        # Initialize the StartupScreen and the SaveGame screen
         self.startup_screen = StartupScreen(self.level_manager, self.clock)
         self.save_game = SaveGame(self.clock)
 
@@ -28,7 +30,6 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    # Salvezi sau nu starea jocului?
                     if self.save_game.run(self.screen, self.level_manager.get_save_info()) == False:
                         pygame.quit()
                         sys.exit()

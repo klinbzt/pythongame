@@ -5,20 +5,16 @@
 		{
 			"tmx_map": "level_0.tmx",
 			"permissions": {
-				"jump": false,
-				"wall_jump": false,
-				"wall_slide": false,
-				"dash": false,
-				"heavy_mode": false,
-				"light_mode": false
+				"jump": true,
+				"dash": true,
+				"heavy_mode": true,
+				"light_mode": true
 			}
 		},
 		{
 			"tmx_map": "level_1.tmx",
 			"permissions": {
 				"jump": true,
-				"wall_jump": false,
-				"wall_slide": false,
 				"dash": false,
 				"heavy_mode": false,
 				"light_mode": false
@@ -28,8 +24,6 @@
 			"tmx_map": "level_2.tmx",
 			"permissions": {
 				"jump": true,
-				"wall_jump": true,
-				"wall_slide": true,
 				"dash": false,
 				"heavy_mode": false,
 				"light_mode": false
@@ -39,8 +33,6 @@
 			"tmx_map": "level_3.tmx",
 			"permissions": {
 				"jump": true,
-				"wall_jump": true,
-				"wall_slide": true,
 				"dash": true,
 				"heavy_mode": false,
 				"light_mode": false

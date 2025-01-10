@@ -1,11 +1,9 @@
 import sys
+from os.path import join
 import pygame
 from pygame.math import Vector2 as vector
 from pygame import image
 import time
-# -----------------------------
-# GLOBAL GAME SETTINGS / CONSTANTS
-# -----------------------------
 
 # Screen dimensions and framerate
 SCREEN_WIDTH = 1280

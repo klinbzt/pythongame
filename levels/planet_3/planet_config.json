@@ -6,8 +6,6 @@
 			"tmx_map": "level_mock.tmx",
 			"permissions": {
 				"jump": true,
-				"wall_jump": true,
-				"wall_slide": true,
 				"dash": true,
 				"heavy_mode": false,
 				"light_mode": false
@@ -17,8 +15,6 @@
 			"tmx_map": "level_mock_moving_platform.tmx",
 			"permissions": {
 				"jump": true,
-				"wall_jump": true,
-				"wall_slide": true,
 				"dash": true,
 				"heavy_mode": false,
 				"light_mode": false
