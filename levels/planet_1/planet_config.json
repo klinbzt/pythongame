@@ -3,6 +3,15 @@
 	"gravity_strength": 10,
 	"levels": [
 		{
+			"tmx_map": "level_0.tmx",
+			"permissions": {
+				"jump": true,
+				"dash": true,
+				"heavy_mode": false,
+				"light_mode": false
+			}
+		},
+		{
 			"tmx_map": "level_mock.tmx",
 			"permissions": {
 				"jump": true,

@@ -38,7 +38,7 @@ class Player(pygame.sprite.Sprite):
 
         # Rects
         self.rect = self.image.get_rect(topleft = pos)
-        self.hitbox_rect = self.rect.inflate(-40, -8)
+        self.hitbox_rect = self.rect.inflate(-30, 0)
         self.prev_rect = self.hitbox_rect.copy()
 
         # Safety check for player position
@@ -49,7 +49,7 @@ class Player(pygame.sprite.Sprite):
         # Movements
         self.planet = planet
         self.direction = vector()
-        self.speed = 200
+        self.speed = 220
         self.mass = 100
         
 		# Jump
@@ -58,7 +58,7 @@ class Player(pygame.sprite.Sprite):
         self.wall_jump_height_factor = 1.5
 
         # Dash
-        self.dash_speed = 600
+        self.dash_speed = 800
         self.dashing = False
 
         # Afterimage settings
@@ -315,8 +315,10 @@ class Player(pygame.sprite.Sprite):
                     self.direction.y -= self.wall_jump_height_factor * self.jump_height
                     if self.on_surface["left"]:
                         self.direction.x = 1
+                        self.facing_right = True
                     else:
                         self.direction.x = -1
+                        self.facing_right = False
 
                 self.jump = False
 

@@ -23,15 +23,15 @@ class Level:
         # Level allowed abilities images
         self.permission_images = {
             "dash": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
-            "heavy_mode": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
-            "light_mode": image.load("../assets/graphics/ui/dash.png").convert_alpha(),
+            "heavy_mode": image.load("../assets/graphics/ui/heavy_mode.png").convert_alpha(),
+            "light_mode": image.load("../assets/graphics/ui/light_mode.png").convert_alpha(),
         }
 
         self.permission_images_used = {
-            "dash": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
-            "heavy_mode": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
-            "light_mode": image.load("../assets/graphics/ui/dash1.png").convert_alpha(),
-        }   
+            "dash": image.load("../assets/graphics/ui/dash_used.png").convert_alpha(),
+            "heavy_mode": image.load("../assets/graphics/ui/heavy_mode_used.png").convert_alpha(),
+            "light_mode": image.load("../assets/graphics/ui/light_mode_used.png").convert_alpha(),
+        }
 
         self.permission_timers = {
             "dash": Timer(1000),
