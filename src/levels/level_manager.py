@@ -16,6 +16,7 @@ class LevelManager:
         self.text_shown = False
         self.once = True
         self.onceLoad = True
+        self.oncePos = True
 
         # Current Planet
         self.current_planet_index = 0
@@ -258,64 +259,91 @@ class LevelManager:
                 # Create and display the text box for welcome
                 text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  Let's try to make it harder!   Try to jump into a wall and see what happens!", font=font, fade_time=10)
                 text.run()
-        elif (not self.text_shown and self.current_level_index == 3 and self.current_planet_index == 0) or (self.once and (430 <= pos.x and pos.x <= 460) and (540 <= pos.y and pos.y <= 550) and self.current_level_index == 2 and self.current_planet_index == 0):
-            self.text_shown = True
+        elif (not self.text_shown and self.current_level_index == 3 and self.current_planet_index == 0) or (self.oncePos and (530 <= pos.x and pos.x <= 700) and (600 <= pos.y and pos.y <= 620) and self.current_level_index == 3 and self.current_planet_index == 0):
             font = pygame.font.Font(None, 30)
 
-            # Calculate box dimensions relative to the screen size
-            box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
-            box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
+            print("AOLO??")
+            if self.oncePos and (530 <= pos.x and pos.x <= 700) and (600 <= pos.y and pos.y <= 620) and self.current_level_index == 3 and self.current_planet_index == 0:
+                # Calculate box dimensions relative to the screen size
+                self.oncePos = False
+                box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
+                box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
 
-            # Center the box on the screen
-            box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
+                # Center the box on the screen
+                box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
 
-            # Create and display the text box for welcome
-            text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  Wow! Great progress!          Now let's introduce dashing moves! ", font=font, fade_time=10)
-            text.run()
+                # Create and display the text box for welcome
+                text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  This will get a little hard!    Use the dash to advance on the wall while jumping", font=font, fade_time=10)
+                text.run()
 
-            font = pygame.font.Font(None, 30)
+                font = pygame.font.Font(None, 30)
 
-            # Calculate box dimensions relative to the screen size
-            box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
-            box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
+                # Calculate box dimensions relative to the screen size
+                box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
+                box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
 
-            # Center the box on the screen
-            box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
+                # Center the box on the screen
+                box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
 
-            # Create and display the text box for welcome
-            text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  Press [D] to dash!  ", font=font, fade_time=10)
-            text.run()
+                # Create and display the text box for welcome
+                text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "   Hint for this level:         You can dash when u fall! ", font=font, fade_time=10)
+                text.run()
+            else:
+                # Calculate box dimensions relative to the screen size
+                box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
+                box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
 
-            font = pygame.font.Font(None, 20)
+                # Center the box on the screen
+                box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
 
-            # Calculate box dimensions relative to the screen size
-            box_width = SCREEN_WIDTH // 4  # e.g., 1/3 of the screen width
-            box_height = SCREEN_HEIGHT // 6  # e.g., 1/4 of the screen height
+                # Create and display the text box for welcome
+                text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  Wow! Great progress!          Now let's introduce dashing moves! ", font=font, fade_time=10)
+                text.run()
 
-            # Center the box on the screen
-            box_position = ((SCREEN_WIDTH - box_width) // 2 - 380, (SCREEN_HEIGHT - box_height) // 2 - 280)
+                font = pygame.font.Font(None, 30)
 
-            # Create and display the text box for welcome
-            text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "   This is the dash cooldown! When \"on cooldown\" the image  will be white!", font=font, fade_time=10)
-            text.run()
+                # Calculate box dimensions relative to the screen size
+                box_width = SCREEN_WIDTH // 3  # e.g., 1/3 of the screen width
+                box_height = SCREEN_HEIGHT // 5  # e.g., 1/4 of the screen height
 
-            arrow_tip_x = box_position[0] - 10  # Tip of the arrow slightly to the left of the box
-            arrow_tip_y = box_position[1] + box_height // 2 - 40  # Center vertically with the box
-            arrow_base_top = (arrow_tip_x + 60, arrow_tip_y - 10)  # Top of the arrow base
-            arrow_base_bottom = (arrow_tip_x + 60, arrow_tip_y + 10)  # Bottom of the arrow base
+                # Center the box on the screen
+                box_position = ((SCREEN_WIDTH - box_width) // 2 + 20, (SCREEN_HEIGHT - box_height) // 2)
 
-            pygame.draw.polygon(
-                self.screen,
-                (255, 255, 255),  # Arrow color (white)
-                [  # Points of the arrow
-                    (arrow_tip_x, arrow_tip_y),
-                    arrow_base_top,
-                    arrow_base_bottom
-                ]
-            )
+                # Create and display the text box for welcome
+                text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "  Press [D] to dash!  ", font=font, fade_time=10)
+                text.run()
 
-            pygame.display.update()
-            pygame.time.delay(4000)
+                font = pygame.font.Font(None, 20)
+
+                # Calculate box dimensions relative to the screen size
+                box_width = SCREEN_WIDTH // 4  # e.g., 1/3 of the screen width
+                box_height = SCREEN_HEIGHT // 6  # e.g., 1/4 of the screen height
+
+                # Center the box on the screen
+                box_position = ((SCREEN_WIDTH - box_width) // 2 - 380, (SCREEN_HEIGHT - box_height) // 2 - 280)
+
+                # Create and display the text box for welcome
+                text = TextBox(box_position, (box_width, box_height), self.screen, self.clock, "   This is the dash cooldown! When \"on cooldown\" the image  will be white!", font=font, fade_time=10)
+                text.run()
+
+                arrow_tip_x = box_position[0] - 10  # Tip of the arrow slightly to the left of the box
+                arrow_tip_y = box_position[1] + box_height // 2 - 40  # Center vertically with the box
+                arrow_base_top = (arrow_tip_x + 60, arrow_tip_y - 10)  # Top of the arrow base
+                arrow_base_bottom = (arrow_tip_x + 60, arrow_tip_y + 10)  # Bottom of the arrow base
+
+                pygame.draw.polygon(
+                    self.screen,
+                    (255, 255, 255),  # Arrow color (white)
+                    [  # Points of the arrow
+                        (arrow_tip_x, arrow_tip_y),
+                        arrow_base_top,
+                        arrow_base_bottom
+                    ]
+                )
+
+                pygame.display.update()
+                pygame.time.delay(1500)
+            
 
         self.text_shown = go_next
     
