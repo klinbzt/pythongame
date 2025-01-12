@@ -5,6 +5,10 @@
 Aplicatia: Platformer 2D - Shifting Realms
 Link Github: https://github.com/klinbzt/pythongame
 
+* MODUL DE RULARE:
+  Pentru setarea venv-ului aveti comanda: ./setup.sh.
+  Intrati in directorul /src si rulati comanda python main.py.
+
 I. MODUL DE FUNCTIONARE, PE SCURT ( aprofundat in punctul II )
 
 La rularea jocului, apare meniul de start, cu diferite optiuni. Printre acestea, se numare: Pornirea jocului de la inceput ( planeta 0, level 0 ), pornirea de la o salvare anterioara ( prin load game ), un meniu de setari, din care se pot configura luminozitatea, volumul sau aspect ratio-ul ecranului.
@@ -87,7 +91,7 @@ Buzatu Calin-Cristian:
 --> Casetele de text animate
 -> A facut merge la branch-uri ( are respectul tuturor membrilor echipei )
 
-Dificultati intampinate:
+Dificultati intampinate: Multe lucruri... Aveam un bug oribil din cauza clock-ului de la pygame. Colegul mea Mihnea l-a descoperit ca printr-un miracol (amin). Probleme de UI am avut, mi a luat extraordinar de mult timp sa implementez butoanele animate si MENIUL!!!!!!! (AICI CEL MAI MULT, BUTOANELE SUNT IMPINSE UNUL DE CELALT), textul care este generat ca typed s.a.m.d...
 
 Calofir Mihnea:
 -> Directorul levels/ si sistemul de parsare de date per planeta / per level

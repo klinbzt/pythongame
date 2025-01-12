@@ -5,10 +5,10 @@
 		{
 			"tmx_map": "level_0.tmx",
 			"permissions": {
-				"jump": true,
-				"dash": true,
-				"heavy_mode": true,
-				"light_mode": true
+				"jump": false,
+				"dash": false,
+				"heavy_mode": false,
+				"light_mode": false
 			}
 		},
 		{
