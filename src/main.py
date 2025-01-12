@@ -30,9 +30,14 @@ class Game:
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    if self.save_game.run(self.screen, self.level_manager.get_save_info()) == False:
-                        pygame.quit()
-                        sys.exit()
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE: 
+                        if self.save_game.run(self.screen, self.level_manager.get_save_info()) == False:
+                            pygame.quit()
+                            sys.exit()
+
 
             self.level_manager.run(dt)
 

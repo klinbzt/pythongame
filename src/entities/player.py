@@ -277,6 +277,8 @@ class Player(pygame.sprite.Sprite):
 
     # Handle any movement related action or ability the player might make
     def handle_player_movement(self, dt):
+        print("pos: ", self.hitbox_rect.x, self.hitbox_rect.y)
+
         if self.dashing:
             # Dash direction is based on facing direction
             self.direction.x = 1 if self.facing_right else -1

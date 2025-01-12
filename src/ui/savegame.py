@@ -1,7 +1,7 @@
 import os, json
 from os.path import join
 from utils.settings import *
-
+from ui.menusettings import *
 #
 # Sub-Overlay Class for "Exit Game"
 # with "Save Game?" or "Don't Save"
@@ -30,13 +30,20 @@ class ExitPopup:
         texture_coords_surface = (0, 0, 190, 190)  # Adjust as needed
         self.texture_surface = texture_image_surface.subsurface(pygame.Rect(*texture_coords_surface))
 
+        # Load button textures
+        texture_image = pygame.image.load("../assets/graphics/tilesets/extra.png").convert_alpha()
+        button_texture_coords = (0, 256, 128, 128)  # Adjust as needed
+        self.button_texture = texture_image.subsurface(pygame.Rect(*button_texture_coords))
+
         # Buttons: "Save Game?" + "Don't Save"
         self.buttons = {
             "Save Game?": {
                 "hover_scale": self.default_scale,
+                "texture": self.button_texture,
             },
             "Don't Save": {
                 "hover_scale": self.default_scale,
+                "texture": self.button_texture,
             }
         }
         self.button_list = list(self.buttons.keys())
@@ -118,40 +125,43 @@ class ExitPopup:
 
         if self.overlay_scale > 0.2:
             self.render_buttons()
-
     def render_buttons(self):
+        """
+        Render buttons with smooth scaling animations, ensuring text is displayed correctly on the buttons.
+        """
         for idx, (label, data) in enumerate(self.buttons.items()):
             rect = data["rect"]
             hover_scale = data["hover_scale"]
 
-            # Adjust hover scaling
+            # Determine if the button is selected
             if idx == self.selected_button_index:
-                target_scale = self.hover_scale
+                target_scale = self.hover_scale  # Hover size
             else:
-                target_scale = self.default_scale
+                target_scale = self.default_scale  # Default size
 
+            # Smoothly adjust the hover scale
             data["hover_scale"] += (target_scale - hover_scale) * self.animation_speed
             new_scale = data["hover_scale"]
 
-            # Scale the button
+            # Calculate the new button size
             sw = int(rect.width * new_scale)
             sh = int(rect.height * new_scale)
             scaled_rect = pygame.Rect(0, 0, sw, sh)
             scaled_rect.center = rect.center
 
-            # Render the button texture
-            texture_image = pygame.image.load("../assets/graphics/tilesets/extra.png").convert_alpha()
-            button_texture_coords = (0, 256, 128, 128)  # Gray button
-            button_texture = texture_image.subsurface(pygame.Rect(*button_texture_coords))
-            scaled_texture = pygame.transform.scale(button_texture, (sw, sh))
-            self.screen.blit(scaled_texture, scaled_rect)
+            # Draw the button texture (scaled)
+            texture = pygame.transform.scale(data["texture"], (sw, sh))
+            self.screen.blit(texture, scaled_rect)
 
-            # Render button text
-            text_font = pygame.font.Font(None, int(36 * new_scale))
-            text_surf = text_font.render(label, True, WHITE)
-            text_rect = text_surf.get_rect(center=scaled_rect.center)
+            # Render and draw the button label text
+            font_size = int(36 * new_scale)  # Dynamically adjust font size
+            text_font = pygame.font.Font(None, font_size)
+            text_surf = text_font.render(label, True, (255, 255, 255))  # White color for text
+            text_rect = text_surf.get_rect(center=scaled_rect.center)  # Center the text on the button
 
+            # Draw the text on top of the button
             self.screen.blit(text_surf, text_rect)
+
 
     def handle_events(self, save_info):
         for event in pygame.event.get():
@@ -327,32 +337,41 @@ class SaveGame:
             self.render_buttons()
 
     def render_buttons(self):
+        """
+        Render buttons with smooth scaling animations, ensuring text is displayed correctly on the buttons.
+        """
         for idx, (label, data) in enumerate(self.buttons.items()):
             rect = data["rect"]
             hover_scale = data["hover_scale"]
 
+            # Determine if the button is selected
             if idx == self.selected_button_index:
-                target_scale = self.hover_scale
+                target_scale = self.hover_scale  # Hover size
             else:
-                target_scale = self.default_scale
+                target_scale = self.default_scale  # Default size
 
+            # Smoothly adjust the hover scale
             data["hover_scale"] += (target_scale - hover_scale) * self.animation_speed
             new_scale = data["hover_scale"]
 
-            # Scale the button
+            # Calculate the new button size
             sw = int(rect.width * new_scale)
             sh = int(rect.height * new_scale)
             scaled_rect = pygame.Rect(0, 0, sw, sh)
             scaled_rect.center = rect.center
 
+            # Draw the button texture (scaled)
             texture = pygame.transform.scale(data["texture"], (sw, sh))
             self.screen.blit(texture, scaled_rect)
 
-            # Render button text
-            text_surf = data.get("text_surf")
-            text_rect = data.get("text_rect")
-            if text_surf and text_rect:
-                self.screen.blit(text_surf, text_rect)
+            # Render and draw the button label text
+            font_size = int(36 * new_scale)  # Dynamically adjust font size
+            text_font = pygame.font.Font(None, font_size)
+            text_surf = text_font.render(label, True, (255, 255, 255))  # White color for text
+            text_rect = text_surf.get_rect(center=scaled_rect.center)  # Center the text on the button
+
+            # Draw the text on top of the button
+            self.screen.blit(text_surf, text_rect)
 
     def handle_events(self, save_info):
         for event in pygame.event.get():
@@ -371,6 +390,10 @@ class SaveGame:
     def handle_button_click(self, label, save_info):
         if label == "Settings":
             print("Settings button clicked!")
+            settings = SettingsMenu(self.screen)
+            settings.run()
+            self.active = False
+            self.cotinuegame = True
         elif label == "Exit Game":
             print("Exit Game -> open sub overlay with Save/Don't Save")
             exit_popup = ExitPopup(self.clock)

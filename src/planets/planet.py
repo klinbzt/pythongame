@@ -1,14 +1,25 @@
 from utils.settings import *
 from audio.audio_manager import AudioManager
+from ui.textbox import *  
 
 class Planet:
     def __init__(self, name, gravity_strength, levels):
+        """
+        Initialize the Planet class.
+
+        :param name: Name of the planet.
+        :param gravity_strength: Gravity strength of the planet.
+        :param levels: Levels associated with the planet.
+        :param screen: Pygame screen where the text will be displayed.
+        :param font: Pygame font object for rendering the text.
+        """
         self.name = name
         self.gravity_strength = gravity_strength
         self.levels = levels
         self.audio_manager = AudioManager()
 
-    # Gravity now works based on both gravity_strength ( planet ) and mass ( entity )
+    
+    # Gravity now works based on both gravity_strength (planet) and mass (entity)
     def apply_gravity(self, entity, dt):
         """Apply gravity to the entity's vertical velocity."""
         entity.direction.y += entity.mass * self.gravity_strength / 2 * dt

@@ -29,7 +29,7 @@ class AudioManager:
         """
         if sound_name in self.sounds:
             # Clamp volume between 0 and 1
-            self.volumes[sound_name] = max(0.0, min(volume, 1.0))
+            self.volumes[sound_name] = max(0.0, min(VOLUME, 1.0))
             self.sounds[sound_name].set_volume(self.volumes[sound_name])
         else:
             print(f"Sound '{sound_name}' not found.")

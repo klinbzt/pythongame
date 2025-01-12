@@ -128,6 +128,8 @@ class Level:
                 if obj.name == "flag":
                     # Create the flag
                     self.flag = Flag((obj.x, obj.y), self.all_sprites, self.collision_sprites)
+
+            
         except ValueError:
             print("Layer 'Objects' not found.")
         
@@ -139,7 +141,6 @@ class Level:
                 Sprite((pos_x * TILE_SIZE, pos_y * TILE_SIZE), surf, self.all_sprites, z)
         except ValueError:
             print("Layer 'Decorations' not found.")
-
     # Constraining the player to the map size
     def check_constraint(self):
         if self.player.hitbox_rect.left <= 0:
@@ -167,3 +168,6 @@ class Level:
             self.audio_manager.set_sound_volume("next_level", 0.5)
             self.audio_manager.play("next_level")
             self.callback()
+            return False
+    
+        return True
